@@ -1,13 +1,13 @@
 #!/bin/bash
 
+# ===== Source unified environment setup =====
+source "$(dirname "$(realpath "$0")")/lib/check_env.sh"
+
 # ===== Ensure run as root =====
 if [ "$EUID" -ne 0 ]; then
 	log_fail "This tool must be run as root. Exiting..."
 	exit 1
 fi
-
-# ===== Source unified environment setup =====
-source "$(dirname "$(realpath "$0")")/lib/check_env.sh"
 
 # ===== Parse Mode =====
 MODE="${1:-check}"
