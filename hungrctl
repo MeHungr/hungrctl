@@ -83,8 +83,8 @@ run_check() {
         else
             log_info "No warnings or failures for $label — nothing sent to Discord." | tee -a "$RUN_LOG"
         fi
+	echo >> "$RUN_LOG" # newline
     fi
-    echo >> "$RUN_LOG" # newline
 }
 
 # ===== Function: show_log_summary =====
