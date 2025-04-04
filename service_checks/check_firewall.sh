@@ -3,10 +3,10 @@
 # ===== Source dependencies =====
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/check_env.sh"
 
-host="$(hostname)"
-mode="${1:-check}"
-baseline_file="$BASELINE_DIR/nftables_rules.baseline"
-temp_file="/tmp/current_nftables_rules.$$"
+HOST="$(hostname)"
+MODE="${1:-check}"
+BASELINE_FILE="$BASELINE_DIR/nftables_rules.baseline"
+TEMP_FILE="$(mktemp "$TMP_DIR/current_nftables_rules.XXXXXX")"
 
 # ===== Ensure root =====
 if [ "$EUID" -ne 0 ]; then
@@ -30,21 +30,21 @@ if [ ! -d "$BASELINE_DIR" ]; then
 fi
 
 # ===== Ensure baseline file exists =====
-if [ ! -f "$baseline_file" ]; then
-    log_warn "No baseline file found at $baseline_file. Creating one now..."
-    nft list ruleset > "$baseline_file"
+if [ ! -f "$BASELINE_FILE" ]; then
+    log_warn "No baseline file found at $BASELINE_FILE. Creating one now..."
+    nft list ruleset > "$BASELINE_FILE"
     if [ $? -eq 0 ]; then
         log_ok "Created a baseline file for nftables rules."
     else
-        log_fail "Could not create baseline file at $baseline_file."
+        log_fail "Could not create baseline file at $BASELINE_FILE."
         exit 5
     fi
 fi
 
 # ===== Function: Get current ruleset =====
 get_ruleset() {
-    nft list ruleset > "$temp_file" 2>/dev/null
-    trap "rm -f \"$temp_file\"" EXIT
+    nft list ruleset > "$TEMP_FILE" 2>/dev/null
+    trap 'rm -f "$TEMP_FILE"' EXIT
     if [ $? -ne 0 ]; then
         log_fail "Could not retrieve nftables ruleset. Is nft running?"
         exit 3
@@ -53,33 +53,33 @@ get_ruleset() {
 
 # ===== Function: Compare against baseline =====
 compare_ruleset() {
-    if ! diff -u "$baseline_file" "$temp_file" > /dev/null; then
+    if ! diff -u "$BASELINE_FILE" "$TEMP_FILE" > /dev/null; then
         log_fail "The nftables ruleset differs from baseline."
-        diff -u "$baseline_file" "$temp_file"
+        diff -u "$BASELINE_FILE" "$TEMP_FILE"
 
         log_info "Restoring baseline ruleset..."
         nft flush ruleset
-        nft -f "$baseline_file"
+        nft -f "$BASELINE_FILE"
 
         if [ $? -eq 0 ]; then
             nft list ruleset > /etc/nftables.conf
             systemctl restart nftables
             systemctl enable nftables
             log_ok "Baseline firewall ruleset restored."
-            echo "[FIREWALL-RESTORE] [$host] $(timestamp): Baseline restored due to mismatch"
+            echo "[FIREWALL-RESTORE] [$HOST] $(timestamp): Baseline restored due to mismatch"
 
             if [ "$DISCORD" = true ]; then
-                send_discord_alert "[$host] Baseline firewall ruleset was restored due to a mismatch at $(timestamp)" \
+                send_discord_alert "[$HOST] Baseline firewall ruleset was restored due to a mismatch at $(timestamp)" \
                                    "FIREWALL RESTORE" \
                                    "$FIREWALL_WEBHOOK_URL"
             fi
             exit 10
         else
             log_fail "Failed to restore baseline ruleset."
-            echo "[FIREWALL-RESTORE-FAIL] [$host] $(timestamp): Restore attempt failed"
+            echo "[FIREWALL-RESTORE-FAIL] [$HOST] $(timestamp): Restore attempt failed"
 
             if [ "$DISCORD" = true ]; then
-                send_discord_alert "[$host] Firewall ruleset failed to restore after mismatch at $(timestamp)" \
+                send_discord_alert "[$HOST] Firewall ruleset failed to restore after mismatch at $(timestamp)" \
                                    "FIREWALL RESTORE FAILED" \
                                    "$FIREWALL_WEBHOOK_URL"
             fi
@@ -92,25 +92,25 @@ compare_ruleset() {
 }
 
 # ===== Baseline Mode =====
-if [[ "$mode" == "baseline" ]]; then
+if [[ "$MODE" == "baseline" ]]; then
     log_info "Comparing current ruleset to baseline before overwriting..."
-    nft list ruleset > "$temp_file"
+    nft list ruleset > "$TEMP_FILE"
 
-    if diff -u "$baseline_file" "$temp_file" > /dev/null; then
+    if diff -u "$BASELINE_FILE" "$TEMP_FILE" > /dev/null; then
         log_ok "No differences found. Baseline already up to date."
-        rm -f "$temp_file"
+        rm -f "$TEMP_FILE"
         exit 0
     else
         log_warn "Differences detected:"
-        diff -u "$baseline_file" "$temp_file"
+        diff -u "$BASELINE_FILE" "$TEMP_FILE"
 
         read -p "Overwrite existing baseline with current ruleset? [y/N]: " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            mv "$temp_file" "$baseline_file"
+            mv "$TEMP_FILE" "$BASELINE_FILE"
             log_ok "Baseline updated successfully."
 
             if [ "$DISCORD" = true ]; then
-                send_discord_alert "[$host] Baseline firewall ruleset was updated via baseline mode at $(timestamp)" \
+                send_discord_alert "[$HOST] Baseline firewall ruleset was updated via baseline mode at $(timestamp)" \
                                    "FIREWALL BASELINE UPDATED" \
                                    "$FIREWALL_WEBHOOK_URL"
             fi
@@ -119,18 +119,19 @@ if [[ "$mode" == "baseline" ]]; then
             log_info "Baseline update canceled."
 
             if [ "$DISCORD" = true ]; then
-                send_discord_alert "[$host] Baseline update was canceled via baseline mode at $(timestamp)" \
+                send_discord_alert "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" \
                                    "FIREWALL BASELINE CANCELED" \
                                    "$FIREWALL_WEBHOOK_URL"
             fi
-            rm -f "$temp_file"
+            rm -f "$TEMP_FILE"
             exit 7
         fi
     fi
 fi
 
 # ===== Default Mode: Check =====
-if [[ "$mode" == "check" ]]; then
+if [[ "$MODE" == "check" ]]; then
     get_ruleset
     compare_ruleset
 fi
+

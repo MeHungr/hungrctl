@@ -1,15 +1,14 @@
 #!/bin/bash
 
-# ===== Source setup and logging utilities =====
-source "$(dirname "$(realpath "$0")")/lib/paths.sh"
-source "$ROOT_DIR/lib/log.sh"
+# ===== Source unified environment setup =====
+source "$(dirname "$(realpath "$0")")/lib/check_env.sh"
 
 # ===== Parse Mode =====
-mode="${1:-check}"
+MODE="${1:-check}"
 
-case "$mode" in
+case "$MODE" in
     check|baseline)
-        log_info "Running in $mode mode"
+        log_info "Running in $MODE mode"
         ;;
     help|--help|-h)
         echo "Usage: $0 [check|baseline]"
@@ -18,45 +17,49 @@ case "$mode" in
         exit 0
         ;;
     *)
-        log_fail "Unknown mode: $mode"
+        log_fail "Unknown mode: $MODE"
         echo "Run '$0 help' for usage."
         exit 1
         ;;
 esac
 
 # ===== Log Files =====
-full_log="$LOG_DIR/service_check_full.log"
-run_log="$LOG_DIR/service_check.log"
+FULL_LOG="$LOG_DIR/service_check_full.log"
+RUN_LOG="$LOG_DIR/service_check.log"
 
 # Clear the single-run log
-> "$run_log"
+> "$RUN_LOG"
 
 # ===== Log Header =====
 {
     echo "==================== SERVICE UPTIME CHECK ===================="
     echo "Timestamp: $(timestamp)"
     echo "Hostname: $(hostname)"
-    echo "Mode: $mode"
+    echo "Mode: $MODE"
     echo "============================================================="
     echo
-} >> "$run_log"
+} >> "$RUN_LOG"
 
 # ===== Function: run_check =====
 run_check() {
     local script_path="$1"
     local label
     label="$(basename "$script_path" .sh)"
-    local temp_log="/tmp/${label}_check.log"
-    local filtered_log="/tmp/${label}_check.filtered.log"
 
-    log_info "[RUNNING] $label" | tee -a "$run_log"
+    local temp_log
+    local filtered_log
+
+    temp_log="$(mktemp "$TMP_DIR/${label}_check.XXXXXX")"
+    filtered_log="$(mktemp "$TMP_DIR/${label}_check_filtered.XXXXXX")"
+
+    log_info "[RUNNING] $label" | tee -a "$RUN_LOG"
 
     # Run check and capture all output
-    "$script_path" "$mode" | tee "$temp_log"
-    cat "$temp_log" | tee -a "$run_log" >> "$full_log"
+    "$script_path" "$MODE" | tee "$temp_log"
+    cat "$temp_log" | tee -a "$RUN_LOG" >> "$FULL_LOG"
 
-    log_info "[DONE] $label" | tee -a "$run_log"
-    echo >> "$run_log"
+    log_info "[DONE] $label" | tee -a "$RUN_LOG"
+    echo >> "$RUN_LOG"
 
     # ===== Filter for WARN and FAIL only =====
     grep --color=never -E '\[WARN\]|\[FAIL\]' "$temp_log" > "$filtered_log"
@@ -73,14 +76,14 @@ run_check() {
                 "${upper_base} alerts on $(hostname) at $(timestamp)" \
                 "$webhook"
         else
-            log_info "No warnings or failures for $label — nothing sent to Discord." | tee -a "$run_log"
+            log_info "No warnings or failures for $label — nothing sent to Discord." | tee -a "$RUN_LOG"
         fi
     fi
 }
 
 # ===== Function: show_log_summary =====
 show_log_summary() {
-    (cat "$run_log"; echo -e "${green}Done! The full log can be viewed at: ${yellow}$full_log${reset}") | less -R
+    (cat "$RUN_LOG"; echo -e "${green}Done! The full log can be viewed at: ${yellow}$FULL_LOG${reset}") | less -R
 }
 
 # ===== Run All Checks =====
@@ -89,7 +92,7 @@ run_check "$ROOT_DIR/service_checks/check_services.sh"
 
 # ===== Final Discord Summary =====
 if [ "$DISCORD" = true ]; then
-    send_discord_alert "$(cat "$run_log")" \
+    send_discord_alert "$(cat "$RUN_LOG")" \
         "SERVICE UPTIME SUMMARY on $(hostname) at $(timestamp)" \
         "$LOGGING_WEBHOOK_URL"
 fi

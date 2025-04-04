@@ -1,37 +1,34 @@
 #!/bin/bash
-# setup/paths.sh
+# lib/paths.sh — Sets up and exports directory paths for hungrctl
 
 SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 ROOT_DIR="$(realpath "$SCRIPT_DIR/..")"
 
-# Load config
-CONFIG_PATH="$ROOT_DIR/config.env"
-[ -f "$CONFIG_PATH" ] && source "$CONFIG_PATH"
+# ===== Load .env if present =====
+CONFIG_PATH="$ROOT_DIR/.env"
+[[ -f "$CONFIG_PATH" ]] && source "$CONFIG_PATH"
 
-# Helper to resolve path
+# ===== Helper: Resolve path relative to ROOT_DIR =====
 resolve_path() {
     case "$1" in
-        /*) echo "$1" ;;                     # absolute
-        *) echo "$ROOT_DIR/$1" ;;           # relative to root
+        /*) echo "$1" ;;                     # Already absolute
+        *) echo "$ROOT_DIR/$1" ;;           # Make relative absolute
     esac
 }
 
-# Resolve OUTPUT_DIR first
+# ===== Resolve and create output dir before realpath =====
 RAW_OUTPUT_DIR="$(resolve_path "${OUTPUT_DIR:-output}")"
+mkdir -p "$RAW_OUTPUT_DIR"
+OUTPUT_DIR="$(realpath "$RAW_OUTPUT_DIR")"
 
-# Now define others based on resolved OUTPUT_DIR
-RAW_LOG_DIR="$RAW_OUTPUT_DIR/logs"
-RAW_BACKUP_DIR="$RAW_OUTPUT_DIR/backups"
-RAW_BASELINE_DIR="$RAW_OUTPUT_DIR/baselines"
+# ===== Define subdirectories =====
+LOG_DIR="$OUTPUT_DIR/logs"
+BACKUP_DIR="$OUTPUT_DIR/backups"
+BASELINE_DIR="$OUTPUT_DIR/baselines"
+TMP_DIR="$OUTPUT_DIR/tmp"
 
-# Create all dirs before resolving them
-mkdir -p "$RAW_OUTPUT_DIR" "$RAW_LOG_DIR" "$RAW_BACKUP_DIR" "$RAW_BASELINE_DIR"
+# ===== Ensure all required directories exist =====
+mkdir -p "$LOG_DIR" "$BACKUP_DIR" "$BASELINE_DIR" "$TMP_DIR"
 
-# Now realpath them (safely)
-export OUTPUT_DIR="$(realpath "$RAW_OUTPUT_DIR")"
-export LOG_DIR="$(realpath "$RAW_LOG_DIR")"
-export BACKUP_DIR="$(realpath "$RAW_BACKUP_DIR")"
-export BASELINE_DIR="$(realpath "$RAW_BASELINE_DIR")"
-export ROOT_DIR
-
-
+# ===== Export all global paths =====
+export ROOT_DIR OUTPUT_DIR LOG_DIR BACKUP_DIR BASELINE_DIR TMP_DIR
