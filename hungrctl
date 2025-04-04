@@ -62,7 +62,6 @@ run_check() {
     cat "$temp_log" >> "$FULL_LOG"
 
     log_info "[DONE] $label" >> "$RUN_LOG"
-    echo >> "$RUN_LOG"
 
     # ===== Filter WARN/FAIL for Discord =====
     grep --color=never -E '\[WARN\]|\[FAIL\]|\[EVENT:.*\]' "$temp_log" > "$filtered_log"
@@ -80,6 +79,7 @@ run_check() {
         else
             echo "[INFO] No warnings or failures for $label — nothing sent to Discord." >> "$RUN_LOG"
         fi
+	echo >> "$RUN_LOG"
     fi
 }
 
