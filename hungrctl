@@ -51,25 +51,22 @@ run_check() {
     local script_path="$1"
     local label
     label="$(basename "$script_path" .sh)"
+    local temp_log="$TMP_DIR/${label}_check.log"
+    local filtered_log="$TMP_DIR/${label}_check.filtered.log"
 
-    local temp_log
-    local filtered_log
+    # Run the check quietly, capture output to a temp log
+    "$script_path" "$mode" > "$temp_log" 2>&1
 
-    temp_log="$(mktemp "$TMP_DIR/${label}_check.XXXXXX")"
-    filtered_log="$(mktemp "$TMP_DIR/${label}_check_filtered.XXXXXX")"
+    # Append to persistent logs
+    cat "$temp_log" >> "$run_log"
+    cat "$temp_log" >> "$full_log"
 
-    log_info "[RUNNING] $label" | tee -a "$RUN_LOG"
+    log_info "[DONE] $label" >> "$run_log"
+    echo >> "$run_log"
 
-    # Run check and capture all output
-    "$script_path" "$MODE" | tee "$temp_log"
-    cat "$temp_log" | tee -a "$RUN_LOG" >> "$FULL_LOG"
-
-    log_info "[DONE] $label" | tee -a "$RUN_LOG"
-
-    # ===== Filter for WARN and FAIL only =====
+    # ===== Filter WARN/FAIL for Discord =====
     grep --color=never -E '\[WARN\]|\[FAIL\]|\[EVENT:.*\]' "$temp_log" > "$filtered_log"
-
-    # ===== Discord Output =====
+    
     if [ "$DISCORD" = true ]; then
         local base="${label#check_}"
         local upper_base="${base^^}"
@@ -77,15 +74,15 @@ run_check() {
         local webhook="${!var_name}"
 
         if [[ -n "$webhook" && -s "$filtered_log" ]]; then
-            send_discord_alert "$(cat "$filtered_log")" \
-                "${upper_base} alerts on $(hostname) at $(timestamp)" \
-                "$webhook"
+            local discord_message
+            discord_message=$(log_discord "$(cat "$filtered_log")" "${upper_base} alerts on $(hostname) at $(timestamp)")
+            send_discord_alert "$discord_message" "$webhook"
         else
-            log_info "No warnings or failures for $label — nothing sent to Discord." | tee -a "$RUN_LOG"
+            echo "[INFO] No warnings or failures for $label — nothing sent to Discord." >> "$run_log"
         fi
-	echo >> "$RUN_LOG" # newline
     fi
 }
+
 
 # ===== Function: show_log_summary =====
 show_log_summary() {
