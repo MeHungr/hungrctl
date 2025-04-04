@@ -74,17 +74,16 @@ fi
 # ===== Discord alert (summary) =====
 if [ "$DISCORD" = true ]; then
     {
-        echo "**Service Check on $HOST at $(timestamp)**"
         echo
 
-        [[ ${#FAILED_SERVICES[@]} -gt 0 ]] && echo "**❌ Failed Services:**" && printf '• %s\n' "${FAILED_SERVICES[@]}" && echo
-        [[ ${#INACTIVE_SERVICES[@]} -gt 0 ]] && echo "**⚠️ Inactive Services:**" && printf '• %s\n' "${INACTIVE_SERVICES[@]}" && echo
-        [[ ${#RESTARTED_SERVICES[@]} -gt 0 ]] && echo "**🔁 Restarted Successfully:**" && printf '• %s\n' "${RESTARTED_SERVICES[@]}" && echo
-        [[ ${#RESTART_FAILS[@]} -gt 0 ]] && echo "**❗ Restart Failed:**" && printf '• %s\n' "${RESTART_FAILS[@]}" && echo
+        [[ ${#FAILED_SERVICES[@]} -gt 0 ]] && echo "Failed Services:" && printf '• %s\n' "${FAILED_SERVICES[@]}" && echo
+        [[ ${#INACTIVE_SERVICES[@]} -gt 0 ]] && echo "Inactive Services:" && printf '• %s\n' "${INACTIVE_SERVICES[@]}" && echo
+        [[ ${#RESTARTED_SERVICES[@]} -gt 0 ]] && echo "Restarted Successfully:" && printf '• %s\n' "${RESTARTED_SERVICES[@]}" && echo
+        [[ ${#RESTART_FAILS[@]} -gt 0 ]] && echo "Restart Failed:" && printf '• %s\n' "${RESTART_FAILS[@]}" && echo
     } > "$TEMP_LOG"
 
     send_discord_alert "$(cat "$TEMP_LOG")" \
-                        "SERVICE ALERT" \
+                        "**Service Check on $HOST at $(timestamp)**" \
                         "$SERVICES_WEBHOOK_URL"
 fi
 
