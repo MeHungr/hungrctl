@@ -54,7 +54,7 @@ run_check() {
     local temp_log="$TMP_DIR/${label}_check.log"
     local filtered_log="$TMP_DIR/${label}_check.filtered.log"
 
-    echo "[RUNNING] $label" >> "$RUN_LOG"
+    log_info "[RUNNING] $label" >> "$RUN_LOG"
 
     # Run the check quietly, capture output to a temp log
     "$script_path" "$mode" > "$temp_log" 2>&1
