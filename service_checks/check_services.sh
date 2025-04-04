@@ -83,7 +83,7 @@ if [ "$DISCORD" = true ]; then
     } > "$TEMP_LOG"
 
     send_discord_alert "$(cat "$TEMP_LOG")" \
-                        "**Service Check on $HOST at $(timestamp)**" \
+                        "**SERVICE ALERT on $HOST at $(timestamp)**" \
                         "$SERVICES_WEBHOOK_URL"
 fi
 
