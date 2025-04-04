@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# ===== Source dependencies =====
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/check_env.sh"
+
 host="$(hostname)"
 mode="${1:-check}"
 baseline_file="$BASELINE_DIR/nftables_rules.baseline"
