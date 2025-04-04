@@ -34,6 +34,22 @@ log_section() {
     echo -e "\n${blue}========== $* ==========${reset}\n"
 }
 
+# === Function: event_log ===
+# Usage:
+#   event_log "RESTORE" "Firewall ruleset restored to baseline"
+#   event_log "BASELINE-UPDATED" "User approved new baseline"
+
+event_log() {
+    local event="$1"
+    shift
+    local message="$*"
+    local host="$(hostname)"
+    local time="$(timestamp)"
+    
+    echo "[EVENT:$event] [$host] $time: $message"
+}
+
+
 # Format a log file or string for Discord
 log_discord() {
     local input="$1"

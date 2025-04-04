@@ -66,7 +66,8 @@ compare_ruleset() {
             systemctl restart nftables
             systemctl enable nftables
             log_ok "Baseline firewall ruleset restored."
-            echo "[FIREWALL-RESTORE] [$HOST] $(timestamp): Baseline restored due to mismatch"
+
+            event_log "RESTORE" "Baseline firewall ruleset restored due to mismatch"
 
             if [ "$DISCORD" = true ]; then
                 send_discord_alert "[$HOST] Baseline firewall ruleset was restored due to a mismatch at $(timestamp)" \
@@ -76,7 +77,7 @@ compare_ruleset() {
             exit 10
         else
             log_fail "Failed to restore baseline ruleset."
-            echo "[FIREWALL-RESTORE-FAIL] [$HOST] $(timestamp): Restore attempt failed"
+            event_log "RESTORE-FAIL" "Attempted to restore firewall ruleset but failed"
 
             if [ "$DISCORD" = true ]; then
                 send_discord_alert "[$HOST] Firewall ruleset failed to restore after mismatch at $(timestamp)" \
@@ -108,6 +109,7 @@ if [[ "$MODE" == "baseline" ]]; then
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
             mv "$TEMP_FILE" "$BASELINE_FILE"
             log_ok "Baseline updated successfully."
+            event_log "BASELINE-UPDATED" "User approved and updated the firewall baseline"
 
             if [ "$DISCORD" = true ]; then
                 send_discord_alert "[$HOST] Baseline firewall ruleset was updated via baseline mode at $(timestamp)" \
@@ -117,6 +119,7 @@ if [[ "$MODE" == "baseline" ]]; then
             exit 0
         else
             log_info "Baseline update canceled."
+            event_log "BASELINE-CANCELED" "User canceled the firewall baseline update"
 
             if [ "$DISCORD" = true ]; then
                 send_discord_alert "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" \
