@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===== Source environment and logging =====
-source "$(dirname "$(realpath "$BASH_SOURCE[0]}")")/../lib/check_env.sh"
+source "$(dirname "$(realpath "$BASH_SOURCE[0]}")")/../lib/env.sh"
 
 HOST="$(hostname)"
 MODE="${1:-check}"

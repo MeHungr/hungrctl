@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===== Source unified environment setup =====
-source "$(dirname "$(realpath "$0")")/lib/check_env.sh"
+source "$(dirname "$(realpath "$0")")/lib/env.sh"
 
 # ===== Ensure run as root =====
 if [ "$EUID" -ne 0 ]; then
