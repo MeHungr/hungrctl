@@ -60,6 +60,8 @@ if [ -s "$TEMP_LOG" ]; then
     event_log "COREUTILS-MODIFIED" "coreutils files differ from expected state on $HOST"
 
     echo "[$HOST] Coreutils integrity check failed at $(timestamp)" > "$SUMMARY_LOG"
+    echo "Failed files:" >> "$SUMMARY_LOG"
+    echo "----------------------------------------" >> "$SUMMARY_LOG"
     cat "$TEMP_LOG" >> "$SUMMARY_LOG"
     # ===== If coreutils is modified, we need to reinstall it. =====
     if [ "$AUTO_REINSTALL_COREUTILS" = true ]; then
@@ -67,18 +69,18 @@ if [ -s "$TEMP_LOG" ]; then
         case "$DISTRO" in
             ubuntu|debian)
                 apt-get install --reinstall -y coreutils >/dev/null 2>&1 \
-                && log_ok "coreutils reinstalled successfully." >> "$SUMMARY_LOG" \
-                || log_fail "coreutils reinstall failed." >> "$SUMMARY_LOG"
+                && tee -a "$SUMMARY_LOG" log_ok "coreutils reinstalled successfully." \
+                || tee -a "$SUMMARY_LOG" log_fail "coreutils reinstall failed."
                 ;;
             rhel|centos|fedora)
                 dnf reinstall -y coreutils >/dev/null 2>&1 \
-                && log_ok "coreutils reinstalled successfully." >> "$SUMMARY_LOG" \
-                || log_fail "coreutils reinstall failed." >> "$SUMMARY_LOG"
+                && tee -a "$SUMMARY_LOG" log_ok "coreutils reinstalled successfully." \
+                || tee -a "$SUMMARY_LOG" log_fail "coreutils reinstall failed."
                 ;;
             arch|manjaro)
                 pacman -S --noconfirm coreutils >/dev/null 2>&1 \
-                && log_ok "coreutils reinstalled successfully." >> "$SUMMARY_LOG" \
-                || log_fail "coreutils reinstall failed." >> "$SUMMARY_LOG"
+                && tee -a "$SUMMARY_LOG" log_ok "coreutils reinstalled successfully." \
+                || tee -a "$SUMMARY_LOG" log_fail "coreutils reinstall failed."
                 ;;
             *)
                 log_fail "Unsupported distro: $DISTRO" >> "$SUMMARY_LOG"

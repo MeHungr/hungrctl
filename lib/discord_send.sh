@@ -48,6 +48,35 @@ send_chunk() {
     fi
 }
 
+send_discord_message() {
+    local content="$1"
+    local title=""
+    local body=""
+    local chunk
+
+    # Extract title and body
+    if [[ "$content" =~ ^(\*\*.*\*\*)\s*\n*```(.*)```$ ]]; then
+        title="${BASH_REMATCH[1]}"
+        body="${BASH_REMATCH[2]}"
+    else
+        send_chunk "$content"
+        return
+    fi
+
+    # Split code block into chunks
+    mapfile -t chunks < <(echo "$body" | fold -s -w "$max_chars")
+
+
+    for i in "${!chunks[@]}"; do
+        chunk="\`\`\`${chunks[$i]}\`\`\`"
+        if [[ $i -eq 0 ]]; then
+            send_chunk "$title\n$chunk"
+        else
+            send_chunk "$chunk"
+        fi
+    done
+}
+
 # ===== Split by characters and send =====
 i=0
 msg_len=${#message}
