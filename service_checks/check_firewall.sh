@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# ===== Source dependencies =====
+# ===== Source environment and logging =====
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 
 HOST="$(hostname)"
 MODE="${1:-check}"
 BASELINE_FILE="$BASELINE_DIR/nftables_rules.baseline"
 TEMP_FILE="$(mktemp "$TMP_DIR/current_nftables_rules.XXXXXX")"
+SUMMARY_LOG="$LOG_DIR/check_firewall.summary"
+trap 'rm -f "$TEMP_FILE"' EXIT
 
 # ===== Ensure root =====
 if [ "$EUID" -ne 0 ]; then
@@ -69,21 +71,13 @@ compare_ruleset() {
 
             event_log "RESTORE" "Baseline firewall ruleset restored due to mismatch"
 
-            if [ "$DISCORD" = true ]; then
-                send_discord_alert "[$HOST] Baseline firewall ruleset was restored due to a mismatch at $(timestamp)" \
-                                   "FIREWALL RESTORE" \
-                                   "$FIREWALL_WEBHOOK_URL"
-            fi
+            echo "[$HOST] Baseline firewall ruleset was restored due to a mismatch at $(timestamp)" > "$SUMMARY_LOG"
             exit 10
         else
             log_fail "Failed to restore baseline ruleset."
             event_log "RESTORE-FAIL" "Attempted to restore firewall ruleset but failed"
 
-            if [ "$DISCORD" = true ]; then
-                send_discord_alert "[$HOST] Firewall ruleset failed to restore after mismatch at $(timestamp)" \
-                                   "FIREWALL RESTORE FAILED" \
-                                   "$FIREWALL_WEBHOOK_URL"
-            fi
+            echo "[$HOST] Firewall ruleset failed to restore after mismatch at $(timestamp)" > "$SUMMARY_LOG"
             exit 11
         fi
     else

@@ -53,6 +53,7 @@ run_check() {
     label="$(basename "$script_path" .sh)"
     local temp_log="$TMP_DIR/${label}_check.log"
     local filtered_log="$TMP_DIR/${label}_check.filtered.log"
+    local summary_log="$LOG_DIR/${label}.summary"
 
     log_info "[RUNNING] $label" >> "$RUN_LOG"
 
@@ -69,15 +70,15 @@ run_check() {
     grep --color=never -E '\[WARN\]|\[FAIL\]|\[EVENT:.*\]' "$temp_log" > "$filtered_log"
     
     if [ "$DISCORD" = true ]; then
+        local summary_content
+        summary_content="$(cat "$summary_log")"
         local base="${label#check_}"
         local upper_base="${base^^}"
         local var_name="${upper_base}_WEBHOOK_URL"
         local webhook="${!var_name}"
 
-        if [[ -n "$webhook" && -s "$filtered_log" ]]; then
-            local discord_message
-            discord_message=$(log_discord "$(cat "$filtered_log")" "${upper_base} alerts on $(hostname) at $(timestamp)")
-            send_discord_alert "$discord_message" "$webhook"
+        if [[ -n "$webhook" ]]; then
+            send_discord_alert "$summary_content" "${upper_base} Alert on $(hostname) at $(timestamp)" "$webhook"
         else
             echo "[INFO] No warnings or failures for $label — nothing sent to Discord." >> "$RUN_LOG"
         fi

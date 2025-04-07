@@ -11,6 +11,15 @@ CONFIG_PATH="$ROOT_DIR/config.sh"
 # ===== Source log functions =====
 source "$ROOT_DIR/lib/log.sh"
 
+# ===== Detect distro =====
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    DISTRO="${ID,,}"
+else
+    DISTRO="unknown"
+fi
+
+
 # ===== Resolve output and tmp directories =====
 OUTPUT_DIR="${OUTPUT_DIR:-output}"  # Default to "output" if not set
 LOG_DIR="$OUTPUT_DIR/logs"
@@ -35,3 +44,4 @@ export BACKUP_DIR="$(realpath "$BACKUP_DIR")"
 export BASELINE_DIR="$(realpath "$BASELINE_DIR")"
 export TMP_DIR="$(realpath "$TMP_DIR")"
 export ROOT_DIR
+export DISTRO

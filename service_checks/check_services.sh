@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # ===== Source environment and logging =====
-source "$(dirname "$(realpath "$BASH_SOURCE[0]}")")/../lib/env.sh"
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 
 HOST="$(hostname)"
 MODE="${1:-check}"
 TEMP_LOG="$(mktemp "$TMP_DIR/service_status.XXXXXX")"
+SUMMARY_LOG="$LOG_DIR/check_services.summary"
 trap 'rm -f "$TEMP_LOG"' EXIT
 
 # ===== Ensure root =====
@@ -71,19 +72,12 @@ if [[ ${#FAILED_SERVICES[@]} -eq 0 && ${#INACTIVE_SERVICES[@]} -eq 0 && ${#RESTA
 	exit 0
 fi
 
-# ===== Discord alert (summary) =====
-if [ "$DISCORD" = true ]; then
-    {
-        echo
-
-        [[ ${#FAILED_SERVICES[@]} -gt 0 ]] && echo "Failed Services:" && printf '• %s\n' "${FAILED_SERVICES[@]}" && echo
-        [[ ${#INACTIVE_SERVICES[@]} -gt 0 ]] && echo "Inactive Services:" && printf '• %s\n' "${INACTIVE_SERVICES[@]}" && echo
-        [[ ${#RESTARTED_SERVICES[@]} -gt 0 ]] && echo "Restarted Successfully:" && printf '• %s\n' "${RESTARTED_SERVICES[@]}" && echo
-        [[ ${#RESTART_FAILS[@]} -gt 0 ]] && echo "Restart Failed:" && printf '• %s\n' "${RESTART_FAILS[@]}" && echo
-    } > "$TEMP_LOG"
-
-    send_discord_alert "$(cat "$TEMP_LOG")" \
-                        "**SERVICE ALERT on $HOST at $(timestamp)**" \
-                        "$SERVICES_WEBHOOK_URL"
+# ===== Generate summary log =====
+{
+    echo
+    [[ ${#FAILED_SERVICES[@]} -gt 0 ]] && echo "Failed Services:" && printf '• %s\n' "${FAILED_SERVICES[@]}" && echo
+    [[ ${#INACTIVE_SERVICES[@]} -gt 0 ]] && echo "Inactive Services:" && printf '• %s\n' "${INACTIVE_SERVICES[@]}" && echo
+    [[ ${#RESTARTED_SERVICES[@]} -gt 0 ]] && echo "Restarted Successfully:" && printf '• %s\n' "${RESTARTED_SERVICES[@]}" && echo
+    [[ ${#RESTART_FAILS[@]} -gt 0 ]] && echo "Restart Failed:" && printf '• %s\n' "${RESTART_FAILS[@]}" && echo
+    } > "$SUMMARY_LOG"
 fi
-
