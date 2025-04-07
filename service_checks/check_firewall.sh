@@ -8,6 +8,8 @@ MODE="${1:-check}"
 BASELINE_FILE="$BASELINE_DIR/nftables_rules.baseline"
 TEMP_FILE="$(mktemp "$TMP_DIR/current_nftables_rules.XXXXXX")"
 SUMMARY_LOG="$SUMMARY_DIR/check_firewall.summary"
+touch "$SUMMARY_LOG"
+> "$SUMMARY_LOG"
 trap 'rm -f "$TEMP_FILE"' EXIT
 
 # ===== Ensure root =====

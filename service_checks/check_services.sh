@@ -6,6 +6,8 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 HOST="$(hostname)"
 MODE="${1:-check}"
 SUMMARY_LOG="$SUMMARY_DIR/check_services.summary"
+touch "$SUMMARY_LOG"
+> "$SUMMARY_LOG"
 
 # ===== Ensure root =====
 if [ "$EUID" -ne 0 ]; then

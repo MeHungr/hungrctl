@@ -7,6 +7,10 @@ HOST="$(hostname)"
 MODE="${1:-check}"
 TEMP_LOG="$(mktemp "$TMP_DIR/coreutils_check.XXXXXX")"
 SUMMARY_LOG="$SUMMARY_DIR/check_coreutils.summary"
+# Create the summary log file if it doesn't exist
+# and clear it.
+touch "$SUMMARY_LOG"
+> "$SUMMARY_LOG"
 trap 'rm -f "$TEMP_LOG"' EXIT
 
 # ===== Ensure root =====
