@@ -61,6 +61,7 @@ send_discord_alert() {
     local message="$1"
     local title="$2"
     local webhook="$3"
+    $title="**$title**"
 
     if [[ -z "$webhook" ]]; then
         log_warn "No Discord webhook provided for alert: \"$title\""
