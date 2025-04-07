@@ -54,7 +54,7 @@ done
     echo
     [[ ${#FAILED_SERVICES[@]} -gt 0 ]] && echo "Failed Services:" && printf '• %s\n' "${FAILED_SERVICES[@]}" && echo
     [[ ${#INACTIVE_SERVICES[@]} -gt 0 ]] && echo "Inactive Services:" && printf '• %s\n' "${INACTIVE_SERVICES[@]}" && echo
-}
+} >> "$SUMMARY_LOG"
 
 # ===== Auto-restart logic =====
 if [ "$AUTO_RESTART" = true ]; then
@@ -87,4 +87,4 @@ fi
     echo
     [[ ${#RESTARTED_SERVICES[@]} -gt 0 ]] && echo "Restarted Successfully:" && printf '• %s\n' "${RESTARTED_SERVICES[@]}" && echo
     [[ ${#RESTART_FAILS[@]} -gt 0 ]] && echo "Restart Failed:" && printf '• %s\n' "${RESTART_FAILS[@]}" && echo
-    } > "$SUMMARY_LOG"
+    } >> "$SUMMARY_LOG"
