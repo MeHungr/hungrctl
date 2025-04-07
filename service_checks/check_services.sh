@@ -6,6 +6,8 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 HOST="$(hostname)"
 MODE="${1:-check}"
 SUMMARY_LOG="$SUMMARY_DIR/check_services.summary"
+# Create the summary log file if it doesn't exist
+# and clear it.
 touch "$SUMMARY_LOG"
 > "$SUMMARY_LOG"
 
@@ -80,4 +82,3 @@ fi
     [[ ${#RESTARTED_SERVICES[@]} -gt 0 ]] && echo "Restarted Successfully:" && printf '• %s\n' "${RESTARTED_SERVICES[@]}" && echo
     [[ ${#RESTART_FAILS[@]} -gt 0 ]] && echo "Restart Failed:" && printf '• %s\n' "${RESTART_FAILS[@]}" && echo
     } > "$SUMMARY_LOG"
-fi
