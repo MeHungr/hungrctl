@@ -74,10 +74,8 @@ run_check() {
         local var_name="${upper_base}_WEBHOOK_URL"
         local webhook="${!var_name}"
 
-        if [[ -n "$webhook" ]]; then
+        if [[ -n "$webhook" && -s "$summary_log" ]]; then
             send_discord_alert "$summary_content" "${upper_base} Alert on $(hostname) at $(timestamp)" "$webhook"
-        else
-            echo "[INFO] No warnings or failures for $label — nothing sent to Discord." >> "$RUN_LOG"
         fi
 	echo >> "$RUN_LOG"
     fi
