@@ -83,6 +83,8 @@ if [ -s "$TEMP_LOG" ]; then
             *)
                 log_fail "Unsupported distro: $DISTRO" >> "$SUMMARY_LOG"
         esac
+    else
+        log_warn "Automatic reinstall of coreutils is disabled. Check config.sh to re-enable. Skipping..." >> "$SUMMARY_LOG"
     fi
     exit 10
 else
