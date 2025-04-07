@@ -7,7 +7,7 @@ HOST="$(hostname)"
 MODE="${1:-check}"
 BASELINE_FILE="$BASELINE_DIR/nftables_rules.baseline"
 TEMP_FILE="$(mktemp "$TMP_DIR/current_nftables_rules.XXXXXX")"
-SUMMARY_LOG="$LOG_DIR/check_firewall.summary"
+SUMMARY_LOG="$SUMMARY_DIR/check_firewall.summary"
 trap 'rm -f "$TEMP_FILE"' EXIT
 
 # ===== Ensure root =====
@@ -46,7 +46,6 @@ fi
 # ===== Function: Get current ruleset =====
 get_ruleset() {
     nft list ruleset > "$TEMP_FILE" 2>/dev/null
-    trap 'rm -f "$TEMP_FILE"' EXIT
     if [ $? -ne 0 ]; then
         log_fail "Could not retrieve nftables ruleset. Is nft running?"
         exit 3
@@ -105,21 +104,13 @@ if [[ "$MODE" == "baseline" ]]; then
             log_ok "Baseline updated successfully."
             event_log "BASELINE-UPDATED" "User approved and updated the firewall baseline"
 
-            if [ "$DISCORD" = true ]; then
-                send_discord_alert "[$HOST] Baseline firewall ruleset was updated via baseline mode at $(timestamp)" \
-                                   "FIREWALL BASELINE UPDATED" \
-                                   "$FIREWALL_WEBHOOK_URL"
-            fi
+            echo "[$HOST] Baseline firewall ruleset was updated via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
             exit 0
         else
             log_info "Baseline update canceled."
             event_log "BASELINE-CANCELED" "User canceled the firewall baseline update"
 
-            if [ "$DISCORD" = true ]; then
-                send_discord_alert "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" \
-                                   "FIREWALL BASELINE CANCELED" \
-                                   "$FIREWALL_WEBHOOK_URL"
-            fi
+            echo "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
             rm -f "$TEMP_FILE"
             exit 7
         fi

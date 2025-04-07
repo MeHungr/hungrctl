@@ -6,7 +6,9 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 HOST="$(hostname)"
 MODE="${1:-check}"
 TEMP_LOG="$(mktemp "$TMP_DIR/coreutils_check.XXXXXX")"
-SUMMARY_LOG="$LOG_DIR/check_coreutils.summary"
+SUMMARY_LOG="$SUMMARY_DIR/check_coreutils.summary"
+# Clear the summary log
+> "$SUMMARY_LOG"
 trap 'rm -f "$TEMP_LOG"' EXIT
 
 # ===== Ensure root =====
@@ -15,6 +17,8 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+
+# ===== Detect distro and check coreutils integrity =====
 case "$DISTRO" in
     ubuntu|debian)
         if ! command -v debsums &>/dev/null; then
@@ -28,36 +32,33 @@ case "$DISTRO" in
             fi
         fi
         log_info "Checking coreutils integrity with debsums..."
-        debsums coreutils >> "$TEMP_LOG" 2>&1
+        debsums coreutils | grep -v " OK$" >> "$TEMP_LOG" 2>&1
         ;;
     rhel|centos|fedora)
         log_info "Checking coreutils integrity with rpm -V..."
-        rpm -V coreutils >> "$TEMP_LOG" 2>&1
+        rpm -V coreutils | grep -v "^\.{9}  " >> "$TEMP_LOG" 2>&1
         ;;
     arch|manjaro)
         if command -v paccheck &>/dev/null; then
             log_info "Checking coreutils integrity with paccheck..."
-            paccheck --md5sum coreutils >> "$TEMP_LOG" 2>&1
+            paccheck --md5sum coreutils | grep -v ": OK$" >> "$TEMP_LOG" 2>&1
         else
             log_info "Falling back to pacman -Qkk..."
-            pacman -Qkk coreutils >> "$TEMP_LOG" 2>&1
+            pacman -Qkk coreutils | grep -E "missing|mismatch|MODIFIED" >> "$TEMP_LOG" 2>&1
         fi
         ;;
     *)
-        log_warn "Unsupported distro: $DISTRO" >> "$TEMP_LOG" 2>&1
+        log_warn "Unsupported distro: $DISTRO"
         ;;
 esac
 
 # ===== Evaluate results =====
-if grep -q "FAILED\|5\|missing\|differ" "$TEMP_LOG"; then
+if [ -s "$TEMP_LOG" ]; then
     log_fail "Coreutils integrity check failed. Potential modification detected."
     event_log "COREUTILS-MODIFIED" "coreutils files differ from expected state on $HOST"
 
-    if [ "$DISCORD" = true ]; then
-        send_discord_alert "[$HOST] Coreutils integrity check failed at $(timestamp)" \
-                           "COREUTILS-MODIFIED" \
-                           "$COREUTILS_WEBHOOK_URL"
-    fi
+    echo "[$HOST] Coreutils integrity check failed at $(timestamp)" >> "$SUMMARY_LOG"
+    cat "$TEMP_LOG" >> "$SUMMARY_LOG"
     exit 10
 else
     log_ok "Coreutils integrity check passed."

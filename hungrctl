@@ -52,7 +52,6 @@ run_check() {
     local label
     label="$(basename "$script_path" .sh)"
     local temp_log="$TMP_DIR/${label}_check.log"
-    local filtered_log="$TMP_DIR/${label}_check.filtered.log"
     local summary_log="$LOG_DIR/${label}.summary"
 
     log_info "[RUNNING] $label" >> "$RUN_LOG"
@@ -66,8 +65,6 @@ run_check() {
 
     log_info "[DONE] $label" >> "$RUN_LOG"
 
-    # ===== Filter WARN/FAIL for Discord =====
-    grep --color=never -E '\[WARN\]|\[FAIL\]|\[EVENT:.*\]' "$temp_log" > "$filtered_log"
     
     if [ "$DISCORD" = true ]; then
         local summary_content
@@ -95,6 +92,7 @@ show_log_summary() {
 # ===== Run All Checks =====
 run_check "$ROOT_DIR/service_checks/check_firewall.sh"
 run_check "$ROOT_DIR/service_checks/check_services.sh"
+run_check "$ROOT_DIR/service_checks/check_coreutils.sh"
 
 # ===== Final Discord Summary =====
 if [ "$DISCORD" = true ]; then

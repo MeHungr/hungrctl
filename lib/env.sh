@@ -26,6 +26,7 @@ LOG_DIR="$OUTPUT_DIR/logs"
 BACKUP_DIR="$OUTPUT_DIR/backups"
 BASELINE_DIR="$OUTPUT_DIR/baselines"
 TMP_DIR="$OUTPUT_DIR/tmp"
+SUMMARY_DIR="$OUTPUT_DIR/summaries"
 
 # ===== Helper function to resolve relative paths to absolute =====
 resolve_path() {

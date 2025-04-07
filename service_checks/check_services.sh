@@ -5,9 +5,7 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 
 HOST="$(hostname)"
 MODE="${1:-check}"
-TEMP_LOG="$(mktemp "$TMP_DIR/service_status.XXXXXX")"
-SUMMARY_LOG="$LOG_DIR/check_services.summary"
-trap 'rm -f "$TEMP_LOG"' EXIT
+SUMMARY_LOG="$SUMMARY_DIR/check_services.summary"
 
 # ===== Ensure root =====
 if [ "$EUID" -ne 0 ]; then
