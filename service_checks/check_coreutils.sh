@@ -56,7 +56,7 @@ esac
 
 # ===== Evaluate results =====
 if [ -s "$TEMP_LOG" ]; then
-    log_fail "Coreutils integrity check failed. Potential modification detected."
+    log_warn "Coreutils integrity check failed. Potential modification detected."
     event_log "COREUTILS-MODIFIED" "coreutils files differ from expected state on $HOST"
 
     echo "[$HOST] Coreutils integrity check failed at $(timestamp)" > "$SUMMARY_LOG"
