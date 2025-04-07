@@ -58,7 +58,7 @@ send_discord_message() {
 
     # Separate title and code block using line parsing
     while IFS= read -r line; do
-        if [[ "$line" =~ ^\*\*.*\*\*$ && "$title" == "" ]]; then
+        if [[ "$line" =~ ^\*\*.*\*\*$ && -z "$title" ]]; then
             title="$line"
         elif [[ "$line" == '```' && $reading_code == false ]]; then
             reading_code=true
@@ -69,8 +69,11 @@ send_discord_message() {
         fi
     done <<< "$content"
 
+    # Trim leading/trailing newlines from body
+    body="$(echo "$body" | sed '/^[[:space:]]*$/d')"
+
     if [[ -z "$body" ]]; then
-        # No code block found — send as-is
+        # No valid code block found, send raw message
         send_chunk "$content"
         return
     fi
@@ -78,9 +81,8 @@ send_discord_message() {
     # Split body into line-safe chunks
     chunk=""
     while IFS= read -r line; do
-        # If adding the line would exceed max_chars, send current chunk
         if (( ${#chunk} + ${#line} + 1 >= max_chars - 10 )); then
-            chunk="\`\`\`\n$chunk\`\`\`"
+            chunk="\`\`\`\n${chunk%$'\n'}\n\`\`\`"
             if [[ -n "$title" ]]; then
                 send_chunk "$title"$'\n'"$chunk"
                 title=""
@@ -92,9 +94,9 @@ send_discord_message() {
         chunk+="$line"$'\n'
     done <<< "$body"
 
-    # Send final chunk
+    # Send final chunk if any
     if [[ -n "$chunk" ]]; then
-        chunk="\`\`\`\n$chunk\`\`\`"
+        chunk="\`\`\`\n${chunk%$'\n'}\n\`\`\`"
         if [[ -n "$title" ]]; then
             send_chunk "$title"$'\n'"$chunk"
         else
@@ -103,5 +105,5 @@ send_discord_message() {
     fi
 }
 
-
+# ===== Send message =====
 send_discord_message "$message"
