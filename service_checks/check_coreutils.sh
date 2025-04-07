@@ -69,18 +69,18 @@ if [ -s "$TEMP_LOG" ]; then
         case "$DISTRO" in
             ubuntu|debian)
                 apt-get install --reinstall -y coreutils >/dev/null 2>&1 \
-                && tee -a "$SUMMARY_LOG" { log_ok "coreutils reinstalled successfully."; } \
-                || tee -a "$SUMMARY_LOG" { log_fail "coreutils reinstall failed."; }
+                && { log_ok "coreutils reinstalled successfully."; } | tee -a "$SUMMARY_LOG" \
+                || { log_fail "coreutils reinstall failed."; } | tee -a "$SUMMARY_LOG"
                 ;;
             rhel|centos|fedora)
                 dnf reinstall -y coreutils >/dev/null 2>&1 \
-                && tee -a "$SUMMARY_LOG" { log_ok "coreutils reinstalled successfully."; } \
-                || tee -a "$SUMMARY_LOG" { log_fail "coreutils reinstall failed."; }
+                && { log_ok "coreutils reinstalled successfully."; } | tee -a "$SUMMARY_LOG" \
+                || { log_fail "coreutils reinstall failed."; } | tee -a "$SUMMARY_LOG"
                 ;;
             arch|manjaro)
                 pacman -S --noconfirm coreutils >/dev/null 2>&1 \
-                && tee -a "$SUMMARY_LOG" { log_ok "coreutils reinstalled successfully."; } \
-                || tee -a "$SUMMARY_LOG" { log_fail "coreutils reinstall failed."; }
+                && { log_ok "coreutils reinstalled successfully."; } | tee -a "$SUMMARY_LOG" \
+                || { log_fail "coreutils reinstall failed."; } | tee -a "$SUMMARY_LOG"
                 ;;
             *)
                 log_fail "Unsupported distro: $DISTRO" >> "$SUMMARY_LOG"
