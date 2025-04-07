@@ -7,8 +7,6 @@ HOST="$(hostname)"
 MODE="${1:-check}"
 TEMP_LOG="$(mktemp "$TMP_DIR/coreutils_check.XXXXXX")"
 SUMMARY_LOG="$SUMMARY_DIR/check_coreutils.summary"
-# Clear the summary log
-> "$SUMMARY_LOG"
 trap 'rm -f "$TEMP_LOG"' EXIT
 
 # ===== Ensure root =====
@@ -57,7 +55,7 @@ if [ -s "$TEMP_LOG" ]; then
     log_fail "Coreutils integrity check failed. Potential modification detected."
     event_log "COREUTILS-MODIFIED" "coreutils files differ from expected state on $HOST"
 
-    echo "[$HOST] Coreutils integrity check failed at $(timestamp)" >> "$SUMMARY_LOG"
+    echo "[$HOST] Coreutils integrity check failed at $(timestamp)" > "$SUMMARY_LOG"
     cat "$TEMP_LOG" >> "$SUMMARY_LOG"
     exit 10
 else
