@@ -52,30 +52,56 @@ send_discord_message() {
     local content="$1"
     local title=""
     local body=""
-    local chunk
+    local chunk=""
+    local in_code_block=false
+    local reading_code=false
 
-    # Extract title and body
-    if [[ "$content" =~ ^(\*\*.*\*\*)\s*\n*```(.*)```$ ]]; then
-        title="${BASH_REMATCH[1]}"
-        body="${BASH_REMATCH[2]}"
-    else
+    # Separate title and code block using line parsing
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^\*\*.*\*\*$ && "$title" == "" ]]; then
+            title="$line"
+        elif [[ "$line" == '```' && $reading_code == false ]]; then
+            reading_code=true
+        elif [[ "$line" == '```' && $reading_code == true ]]; then
+            break
+        elif $reading_code; then
+            body+="$line"$'\n'
+        fi
+    done <<< "$content"
+
+    if [[ -z "$body" ]]; then
+        # No code block found — send as-is
         send_chunk "$content"
         return
     fi
 
-    # Split code block into chunks
-    mapfile -t chunks < <(echo "$body" | fold -s -w "$max_chars")
+    # Split body into line-safe chunks
+    chunk=""
+    while IFS= read -r line; do
+        # If adding the line would exceed max_chars, send current chunk
+        if (( ${#chunk} + ${#line} + 1 >= max_chars - 10 )); then
+            chunk="\`\`\`\n$chunk\`\`\`"
+            if [[ -n "$title" ]]; then
+                send_chunk "$title"$'\n'"$chunk"
+                title=""
+            else
+                send_chunk "$chunk"
+            fi
+            chunk=""
+        fi
+        chunk+="$line"$'\n'
+    done <<< "$body"
 
-
-    for i in "${!chunks[@]}"; do
-        chunk="\`\`\`${chunks[$i]}\`\`\`"
-        if [[ $i -eq 0 ]]; then
-            send_chunk "$title\n$chunk"
+    # Send final chunk
+    if [[ -n "$chunk" ]]; then
+        chunk="\`\`\`\n$chunk\`\`\`"
+        if [[ -n "$title" ]]; then
+            send_chunk "$title"$'\n'"$chunk"
         else
             send_chunk "$chunk"
         fi
-    done
+    fi
 }
 
-send_discord_message "$message"
 
+send_discord_message "$message"
