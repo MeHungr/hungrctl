@@ -37,7 +37,7 @@ resolve_path() {
 }
 
 # ===== Create all necessary directories =====
-mkdir -p "$LOG_DIR" "$BACKUP_DIR" "$BASELINE_DIR" "$TMP_DIR"
+mkdir -p "$LOG_DIR" "$BACKUP_DIR" "$BASELINE_DIR" "$TMP_DIR" "$SUMMARY_DIR"
 
 # ===== Export final resolved paths =====
 export LOG_DIR="$(realpath "$LOG_DIR")"
