@@ -50,24 +50,13 @@ event_log() {
 }
 
 
-# Format a log file or string for Discord
+# Strip ANSI color codes and return cleaned content
 log_discord() {
     local input="$1"
-    local title="${2:-}"
-    local content
-
-    # Strip ANSI color codes
-    content="$(echo "$input" | sed -r 's/\x1B\[[0-9;]*[mK]//g')"
-
-    # Wrap in code block
-    if [[ -n "$title" ]]; then
-        echo -e "**$title**\n\`\`\`\n$content\n\`\`\`"
-    else
-        echo -e "\`\`\`\n$content\n\`\`\`"
-    fi
+    echo "$input" | sed -r 's/\x1B\[[0-9;]*[mK]//g'
 }
 
-# Combines the functionality of log_discord and discord_send.sh
+# Send a Discord alert with a given title, message, and webhook
 send_discord_alert() {
     local message="$1"
     local title="$2"
@@ -78,8 +67,8 @@ send_discord_alert() {
         return 1
     fi
 
-    local formatted
-    formatted=$(log_discord "$message" "$title")
+    local clean_content
+    clean_content=$(log_discord "$message")
 
     local script_dir
     script_dir="$(dirname "${BASH_SOURCE[0]}")"
@@ -90,5 +79,5 @@ send_discord_alert() {
         return 2
     fi
 
-    "$discord_script" "$formatted" "$webhook"
+    "$discord_script" "$title" "$clean_content" "$webhook"
 }

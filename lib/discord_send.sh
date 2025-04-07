@@ -23,17 +23,18 @@ ensure_jq_installed() {
 ensure_jq_installed
 
 # ===== Input =====
-message="$1"
-discord_webhook_url="$2"
+title="$1"
+body="$2"
+discord_webhook_url="$3"
 max_chars=1900
 
-if [[ -z "$message" || -z "$discord_webhook_url" ]]; then
-    echo "Usage: $0 <message> <discord_webhook_url>"
+if [[ -z "$body" || -z "$discord_webhook_url" ]]; then
+    echo "Usage: $0 <title> <body> <discord_webhook_url>"
     exit 1
 fi
 
-# ===== Strip ANSI color codes =====
-message="$(echo "$message" | sed -r 's/\x1B\[[0-9;]*[mK]//g')"
+# ===== Strip ANSI color codes from body =====
+body="$(echo "$body" | sed -r 's/\x1B\[[0-9;]*[mK]//g')"
 
 # ===== Send one chunk =====
 send_chunk() {
@@ -48,33 +49,37 @@ send_chunk() {
     fi
 }
 
+# ===== Send Discord Message =====
 send_discord_message() {
-    local content="$1"
-    local title=""
-    local body=""
-    local chunk
+    local chunk=""
+    local is_first=true
 
-    # Extract title and body
-    if [[ "$content" =~ ^(\*\*.*\*\*)\s*\n*```(.*)```$ ]]; then
-        title="${BASH_REMATCH[1]}"
-        body="${BASH_REMATCH[2]}"
-    else
-        send_chunk "$content"
-        return
-    fi
+    # Clean body: remove blank lines at start/end
+    body="$(echo "$body" | awk 'NF' ORS="\n")"
 
-    # Split code block into chunks
-    mapfile -t chunks < <(echo "$body" | fold -s -w "$max_chars")
+    while IFS= read -r line; do
+        if (( ${#chunk} + ${#line} + 1 >= max_chars - 10 )); then
+            chunk="\`\`\`${chunk%$'\n'}\`\`\`"
+            if $is_first && [[ -n "$title" ]]; then
+                send_chunk "$title"$'\n'"$chunk"
+                is_first=false
+            else
+                send_chunk "$chunk"
+            fi
+            chunk=""
+        fi
+        chunk+="$line"$'\n'
+    done <<< "$body"
 
-
-    for i in "${!chunks[@]}"; do
-        chunk="\`\`\`${chunks[$i]}\`\`\`"
-        if [[ $i -eq 0 ]]; then
-            send_chunk "$title$chunk"
+    # Final chunk
+    if [[ -n "$chunk" ]]; then
+        chunk="\`\`\`${chunk%$'\n'}\`\`\`"
+        if $is_first && [[ -n "$title" ]]; then
+            send_chunk "$title"$'\n'"$chunk"
         else
             send_chunk "$chunk"
         fi
-    done
+    fi
 }
 
-send_discord_message "$message"
+send_discord_message
