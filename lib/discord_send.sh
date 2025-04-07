@@ -52,58 +52,29 @@ send_discord_message() {
     local content="$1"
     local title=""
     local body=""
-    local chunk=""
-    local in_code_block=false
-    local reading_code=false
+    local chunk
 
-    # Separate title and code block using line parsing
-    while IFS= read -r line; do
-        if [[ "$line" =~ ^\*\*.*\*\*$ && -z "$title" ]]; then
-            title="$line"
-        elif [[ "$line" == '```' && $reading_code == false ]]; then
-            reading_code=true
-        elif [[ "$line" == '```' && $reading_code == true ]]; then
-            break
-        elif $reading_code; then
-            body+="$line"$'\n'
-        fi
-    done <<< "$content"
-
-    # Trim leading/trailing newlines from body
-    body="$(echo "$body" | sed '/^[[:space:]]*$/d')"
-
-    if [[ -z "$body" ]]; then
-        # No valid code block found, send raw message
+    # Extract title and body
+    if [[ "$content" =~ ^(\*\*.*\*\*)\s*\n*```(.*)```$ ]]; then
+        title="${BASH_REMATCH[1]}"
+        body="${BASH_REMATCH[2]}"
+    else
         send_chunk "$content"
         return
     fi
 
-    # Split body into line-safe chunks
-    chunk=""
-    while IFS= read -r line; do
-        if (( ${#chunk} + ${#line} + 1 >= max_chars - 10 )); then
-            chunk="\`\`\`\n${chunk%$'\n'}\n\`\`\`"
-            if [[ -n "$title" ]]; then
-                send_chunk "$title"$'\n'"$chunk"
-                title=""
-            else
-                send_chunk "$chunk"
-            fi
-            chunk=""
-        fi
-        chunk+="$line"$'\n'
-    done <<< "$body"
+    # Split code block into chunks
+    mapfile -t chunks < <(echo "$body" | fold -s -w "$max_chars")
 
-    # Send final chunk if any
-    if [[ -n "$chunk" ]]; then
-        chunk="\`\`\`\n${chunk%$'\n'}\n\`\`\`"
-        if [[ -n "$title" ]]; then
-            send_chunk "$title"$'\n'"$chunk"
+
+    for i in "${!chunks[@]}"; do
+        chunk="\`\`\`${chunks[$i]}\`\`\`"
+        if [[ $i -eq 0 ]]; then
+            send_chunk "$title$chunk"
         else
             send_chunk "$chunk"
         fi
-    fi
+    done
 }
 
-# ===== Send message =====
 send_discord_message "$message"
