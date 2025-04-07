@@ -77,13 +77,5 @@ send_discord_message() {
     done
 }
 
-# ===== Split by characters and send =====
-i=0
-msg_len=${#message}
-
-while [ $i -lt $msg_len ]; do
-    chunk="${message:$i:$max_chars}"
-    send_chunk "$chunk"
-    ((i+=max_chars))
-done
+send_discord_message "$message"
 
