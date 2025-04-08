@@ -11,7 +11,7 @@ run_check() {
     log_info "[RUNNING] $label" >> "$RUN_LOG"
 
     # Run the check quietly, capture output to a temp log
-    "$script_path" "$mode" > "$temp_log" 2>&1
+    "$script_path" "$MODE" > "$temp_log" 2>&1
 
     # Append to persistent logs
     cat "$temp_log" >> "$RUN_LOG"
@@ -123,7 +123,19 @@ if ! command -v getopt &> /dev/null; then
     esac
 fi
 
-# ===== Flags =====
+# ===== Parse command line arguments =====
+# First, check if the last argument is a mode
+if [ $# -gt 0 ]; then
+    case "${!#}" in
+        check|baseline)
+            MODE="${!#}"
+            # Remove the mode from arguments
+            set -- "${@:1:$#-1}"
+            ;;
+    esac
+fi
+
+# Now parse the remaining options
 OPTS=$(getopt -o "acfhlm:psu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:" -n "$0" -- "$@")
 if [ $? -ne 0 ]; then
     show_help
@@ -190,20 +202,6 @@ while true; do
             ;;
     esac
 done
-
-# Handle the mode argument if it's provided after --
-if [ $# -gt 0 ]; then
-    case "$1" in
-        check|baseline)
-            MODE="$1"
-            ;;
-        *)
-            log_fail "Unknown mode: $1"
-            show_help
-            exit 1
-            ;;
-    esac
-fi
 
 # Run all checks if no specific check was specified
 if [ "$run_all" = true ]; then
