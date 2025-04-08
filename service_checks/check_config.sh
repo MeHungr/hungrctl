@@ -66,7 +66,12 @@ for file in "${CONFIG_FILES[@]}"; do
     if ! diff -q "$file" "$baseline_file" >/dev/null; then
         log_warn "$file differs from baseline."
         MODIFIED_FILES+=("$file")
-        diff -u "$file" "$baseline_file"
+        # Only show diff if it's relatively short
+        if [ "$(diff -u "$file" "$baseline_file" | wc -l)" -lt 10 ]; then
+            diff -u "$file" "$baseline_file"
+        else
+            log_warn "Diff too large to display. Use 'diff -u \"$file\" \"$baseline_file\"' to view changes."
+        fi
 
         if [ "$AUTO_RESTORE_CONFIG_FILES" = true ]; then
             cp "$baseline_file" "$file"
