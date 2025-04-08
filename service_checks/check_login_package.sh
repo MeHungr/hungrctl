@@ -33,19 +33,19 @@ case "$DISTRO" in
             fi
         fi
         log_info "Checking login package integrity with debsums..."
-        debsums -s login >> "$SUMMARY_LOG" 2>&1
+        debsums -s login >> "$TEMP_LOG" 2>&1
         ;;
     rhel|centos|fedora)
         log_info "Checking login package integrity with rpm -V..."
-        rpm -V login >> "$SUMMARY_LOG" 2>&1
+        rpm -V login >> "$TEMP_LOG" 2>&1
         ;;
     arch|manjaro)
         if command -v paccheck &>/dev/null; then
             log_info "Checking login package integrity with paccheck..."
-            paccheck --md5sum login | grep -v ": OK$" >> "$SUMMARY_LOG" 2>&1
+            paccheck --md5sum login | grep -v ": OK$" >> "$TEMP_LOG" 2>&1
         else
             log_info "Falling back to pacman -Qkk..."
-            pacman -Qkk login >> "$SUMMARY_LOG" 2>&1
+            pacman -Qkk login >> "$TEMP_LOG" 2>&1
         fi
         ;;
     *)
