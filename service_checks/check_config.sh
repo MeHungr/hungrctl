@@ -85,11 +85,13 @@ done
 
 # ===== Generate summary log =====
 {
-    echo "[$HOST] Config check failed at $(timestamp)"
-    echo
-    [[ ${#MISSING_FILES[@]} -gt 0 ]] && echo "Missing Files:" && printf '• %s\n' "${MISSING_FILES[@]}" && echo
-    [[ ${#MODIFIED_FILES[@]} -gt 0 ]] && echo "Modified Files:" && printf '• %s\n' "${MODIFIED_FILES[@]}" && echo
-    [[ ${#RESTORED_FILES[@]} -gt 0 ]] && echo "Restored Files:" && printf '• %s\n' "${RESTORED_FILES[@]}" && echo
+    if [[ ${#MISSING_FILES[@]} -gt 0 || ${#MODIFIED_FILES[@]} -gt 0 ]]; then
+        echo "[$HOST] Config check failed at $(timestamp)"
+        echo
+        [[ ${#MISSING_FILES[@]} -gt 0 ]] && echo "Missing Files:" && printf '• %s\n' "${MISSING_FILES[@]}" && echo
+        [[ ${#MODIFIED_FILES[@]} -gt 0 ]] && echo "Modified Files:" && printf '• %s\n' "${MODIFIED_FILES[@]}" && echo
+        [[ ${#RESTORED_FILES[@]} -gt 0 ]] && echo "Restored Files:" && printf '• %s\n' "${RESTORED_FILES[@]}" && echo
+    fi
 } >> "$SUMMARY_LOG"
 
 # ===== Report Results =====
