@@ -53,13 +53,15 @@ show_log_summary() {
 show_help() {
     echo "Usage: $0 [OPTIONS] [check|baseline]"
     echo
+    echo "This script runs a series of checks on the system to ensure it's running optimally."
+    echo "Provided no arguments, it will run all checks in check mode."
     echo "Options:"
     echo "  -a, --all     Run all checks"
     echo "  -h, --help    Show this help message"
     echo "  -c, --config  Run config check"
     echo "  -f, --firewall Run firewall check"
     echo "  -l, --login   Run login package check"
-    echo "  -m, --mode    Run in check or baseline mode"
+    echo "  -m, --mode    Explicitly set mode to check or baseline"
     echo "  -p, --passwd  Run passwd package check"
     echo "  -s, --services Run services check"
     echo "  -u, --coreutils Run coreutils check"
