@@ -87,6 +87,33 @@ break_services() {
     log_ok "Services broken successfully"
 }
 
+# ===== Function to break firewall =====
+break_firewall() {
+    log_info "Breaking firewall..."
+    
+    # Create a temporary nftables ruleset
+    cat > /tmp/broken_firewall.nft << 'EOF'
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy accept;
+        tcp dport { 22, 80, 443, 3389, 445, 23 } accept
+    }
+    chain forward {
+        type filter hook forward priority 0; policy accept;
+    }
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}
+EOF
+
+    # Apply the broken ruleset
+    nft -f /tmp/broken_firewall.nft
+    rm /tmp/broken_firewall.nft
+    
+    log_ok "Firewall broken successfully"
+}
+
 # # ===== Function to break config files =====
 # break_config_files() {
 #     log_info "Breaking config files..."
@@ -136,10 +163,12 @@ restore_all() {
         systemctl start "$service" 2>/dev/null || true
     done
     
-    # # Restore config files
-    # for config_file in "${CONFIG_FILES[@]}"; do
-    #     [ -f "${config_file}.bak" ] && mv "${config_file}.bak" "$config_file"
-    # done
+    # Restore firewall
+    nft flush ruleset
+    nft add table inet filter
+    nft add chain inet filter input { type filter hook input priority 0 \; policy drop \; }
+    nft add chain inet filter forward { type filter hook forward priority 0 \; policy drop \; }
+    nft add chain inet filter output { type filter hook output priority 0 \; policy accept \; }
     
     log_ok "All components restored successfully"
 }
@@ -151,6 +180,7 @@ case "$1" in
         break_login_package
         break_passwd_package
         break_services
+        break_firewall
         # break_config_files
         ;;
     "restore")
