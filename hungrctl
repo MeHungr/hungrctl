@@ -69,14 +69,12 @@ show_help() {
     echo "  baseline      Create or update baseline files"
 
     echo "Examples:"
+    echo "  $0"
     echo "  $0 --all"
     echo "  $0 --config"
     echo "  $0 -f"
-    echo "  $0 --login"
-    echo "  $0 -p"
-    echo "  $0 --services"
-    echo "  $0 -u"
-    echo "  $0 -am baseline"
+    echo "  $0 baseline"
+    echo "  $0 -m baseline -f"
 }
 
 # ===== Source unified environment setup =====
