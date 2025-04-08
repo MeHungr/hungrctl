@@ -5,7 +5,7 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 
 HOST="$(hostname)"
 MODE="${1:-check}"
-SUMMARY_LOG="$SUMMARY_DIR/check_config_files.summary"
+SUMMARY_LOG="$SUMMARY_DIR/check_config.summary"
 TEMP_LOG="$(mktemp "$TMP_DIR/config_files_check.XXXXXX")"
 # Create the summary log file if it doesn't exist
 # and clear it.
