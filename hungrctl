@@ -150,7 +150,7 @@ if [ $# -gt 0 ]; then
 fi
 
 # Now parse the remaining options
-OPTS=$(getopt -o "acfhlm:psu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:" -n "$0" -- "$@")
+OPTS=$(getopt -o "acfhlm:npsu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:,no-summary" -n "$0" -- "$@")
 if [ $? -ne 0 ]; then
     show_help
     exit 1
@@ -160,6 +160,9 @@ eval set -- "$OPTS"
 
 # Default to running all checks if no specific check is specified
 run_all=true
+
+# Default to showing the summary if no specific check is specified
+summary=true
 
 while true; do
     case "$1" in
@@ -185,6 +188,10 @@ while true; do
         -m|--mode)
             MODE="$2"
             shift 2
+            ;;
+        -n|--no-summary)
+            summary=false
+            shift
             ;;
         -p|--passwd)
             run_all=false
@@ -230,4 +237,6 @@ if [ "$DISCORD" = true ]; then
 fi
 
 # ===== Show Output =====
-show_log_summary
+if [ "$summary" = true ]; then
+    show_log_summary
+fi
