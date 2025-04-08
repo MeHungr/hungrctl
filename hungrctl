@@ -22,8 +22,10 @@ run_check() {
     cat "$RUN_LOG" >> "$FULL_LOG"
 
     # Append summary to full summary
-    cat "$summary_log" >> "$FULL_SUMMARY"
-    echo >> "$FULL_SUMMARY"
+    if [ -e "$summary_log" ]; then
+        cat "$summary_log" >> "$FULL_SUMMARY"
+        echo >> "$FULL_SUMMARY"
+    fi
 
     if [ "$DISCORD" = true ]; then
         local summary_content
