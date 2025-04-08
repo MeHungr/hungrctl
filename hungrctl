@@ -91,6 +91,7 @@ show_log_summary() {
 run_check "$ROOT_DIR/service_checks/check_firewall.sh"
 run_check "$ROOT_DIR/service_checks/check_services.sh"
 run_check "$ROOT_DIR/service_checks/check_coreutils.sh"
+run_check "$ROOT_DIR/service_checks/check_login_package.sh"
 
 # ===== Final Discord Summary =====
 if [ "$DISCORD" = true ]; then
