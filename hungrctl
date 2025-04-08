@@ -21,6 +21,10 @@ run_check() {
     # Append to full log
     cat "$RUN_LOG" >> "$FULL_LOG"
 
+    # Append summary to full summary
+    cat "$summary_log" >> "$FULL_SUMMARY"
+    echo >> "$FULL_SUMMARY"
+
     if [ "$DISCORD" = true ]; then
         local summary_content
         summary_content="$(cat "$summary_log")"
@@ -97,6 +101,7 @@ MODE="check"
 # ===== Log Files =====
 FULL_LOG="$LOG_DIR/service_check_full.log"
 RUN_LOG="$LOG_DIR/service_check.log"
+FULL_SUMMARY="$SUMMARY_DIR/service_check_full.summary"
 
 # Clear the single-run log
 > "$RUN_LOG"
