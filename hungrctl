@@ -124,6 +124,7 @@ if ! command -v getopt &> /dev/null; then
 fi
 
 # ===== Parse command line arguments =====
+
 # First, check if the last argument is a mode
 if [ $# -gt 0 ]; then
     case "${!#}" in
