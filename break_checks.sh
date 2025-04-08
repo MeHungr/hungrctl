@@ -124,7 +124,7 @@ break_config_files() {
             # Create a broken version
             echo "# This is a broken config file" > "$file"
             echo "# Original content backed up to ${file}.bak" >> "$file"
-            log_info "Modified config file: $file"
+            log_info "Modified config file: $file (backup at ${file}.bak)"
         fi
     done
     log_ok "Config files broken successfully"
