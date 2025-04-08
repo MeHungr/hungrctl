@@ -25,6 +25,8 @@ OUTPUT_DIR="${OUTPUT_DIR:-output}"  # Default to "output" if not set
 LOG_DIR="$OUTPUT_DIR/logs"
 BACKUP_DIR="$OUTPUT_DIR/backups"
 BASELINE_DIR="$OUTPUT_DIR/baselines"
+CONFIG_BASELINE_DIR="$BASELINE_DIR/config"
+FIREWALL_BASELINE_DIR="$BASELINE_DIR/firewall"
 TMP_DIR="$OUTPUT_DIR/tmp"
 SUMMARY_DIR="$OUTPUT_DIR/summaries"
 
@@ -37,12 +39,14 @@ resolve_path() {
 }
 
 # ===== Create all necessary directories =====
-mkdir -p "$LOG_DIR" "$BACKUP_DIR" "$BASELINE_DIR" "$TMP_DIR" "$SUMMARY_DIR"
+mkdir -p "$LOG_DIR" "$BACKUP_DIR" "$BASELINE_DIR" "$CONFIG_BASELINE_DIR" "$FIREWALL_BASELINE_DIR" "$TMP_DIR" "$SUMMARY_DIR"
 
 # ===== Export final resolved paths =====
 export LOG_DIR="$(realpath "$LOG_DIR")"
 export BACKUP_DIR="$(realpath "$BACKUP_DIR")"
 export BASELINE_DIR="$(realpath "$BASELINE_DIR")"
+export CONFIG_BASELINE_DIR="$(realpath "$CONFIG_BASELINE_DIR")"
+export FIREWALL_BASELINE_DIR="$(realpath "$FIREWALL_BASELINE_DIR")"
 export TMP_DIR="$(realpath "$TMP_DIR")"
 export ROOT_DIR
 export DISTRO

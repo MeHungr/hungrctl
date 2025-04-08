@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# ===== Source environment and logging =====
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
+
+HOST="$(hostname)"
+MODE="${1:-check}"
+SUMMARY_LOG="$SUMMARY_DIR/check_config_files.summary"
+TEMP_LOG="$(mktemp "$TMP_DIR/config_files_check.XXXXXX")"
+# Create the summary log file if it doesn't exist
+# and clear it.
+touch "$SUMMARY_LOG"
+> "$SUMMARY_LOG"
+trap 'rm -f "$TEMP_LOG"' EXIT
+
+# ===== Ensure root =====
+if [ "$EUID" -ne 0 ]; then
+    log_fail "This script must be run as root."
+    exit 1
+fi
+
+# ===== Check if CONFIG_FILES is set =====
+if [ -z "${CONFIG_FILES[*]}" ]; then
+    log_warn "No CONFIG_FILES defined in config.sh"
+    exit 0
+fi
+
+# ===== Ensure baseline directory exists =====
+mkdir -p "$CONFIG_BASELINE_DIR"
+
+# ===== Run Checks =====
+failures=0
+for file in "${CONFIG_FILES[@]}"; do
+    baseline_file="$CONFIG_BASELINE_DIR/$(echo "$file" | sed 's|/|_|g').bak"
+
+    if [ "$MODE" = "baseline" ]; then
+        cp "$file" "$baseline_file"
+        log_ok "Saved baseline for $file"
+        continue
+    fi
+
+    if [ ! -f "$baseline_file" ]; then
+        log_warn "No baseline exists for $file. Creating one now..."
+        cp "$file" "$baseline_file"
+        log_ok "Baseline created for $file"
+        continue
+    fi
+
+    if [ ! -e "$file" ]; then
+        log_warn "$file is missing"
+        log_warn "Missing: $file" >> "$SUMMARY_LOG"
+
+        if [ "$AUTO_RESTORE_CONFIG_FILES" = true ]; then
+            cp "$baseline_file" "$file"
+            log_ok "$file restored from baseline."
+            log_info "Restored missing: $file" >> "$SUMMARY_LOG"
+            event_log "CONFIG-RESTORE" "$file was missing and restored from baseline on $HOST"
+        else
+            event_log "CONFIG-MISSING" "$file is missing on $HOST"
+        fi
+        ((failures++))
+        continue
+    fi
+
+    if ! diff -q "$file" "$baseline_file" >/dev/null; then
+        log_warn "$file differs from baseline."
+        log_warn "Modified: $file" >> "$SUMMARY_LOG"
+
+        if [ "$AUTO_RESTORE_CONFIG_FILES" = true ]; then
+            cp "$baseline_file" "$file"
+            log_ok "$file restored from baseline."
+            log_info "Restored: $file" >> "$SUMMARY_LOG"
+            event_log "CONFIG-RESTORE" "$file restored from baseline on $HOST"
+        else
+            event_log "CONFIG-MODIFIED" "$file modified on $HOST"
+        fi
+        ((failures++))
+    else
+        log_ok "$file matches baseline."
+    fi
+
+done
+
+# ===== Report Results =====
+if [[ $failures -gt 0 ]]; then
+    log_warn "Config file check completed with $failures issues."
+    echo "[$HOST] Config file check failed with $failures issue(s) at $(timestamp)" >> "$SUMMARY_LOG"
+    exit 10
+else
+    log_ok "All config files validated successfully."
+    exit 0
+fi

@@ -114,18 +114,21 @@ EOF
     log_ok "Firewall broken successfully"
 }
 
-# # ===== Function to break config files =====
-# break_config_files() {
-#     log_info "Breaking config files..."
-#     for config_file in "${CONFIG_FILES[@]}"; do
-#         if [ -f "$config_file" ]; then
-#             cp "$config_file" "${config_file}.bak"
-#             echo "# This is a broken config file" > "$config_file"
-#             log_info "Modified config file: $config_file"
-#         fi
-#     done
-#     log_ok "Config files broken successfully"
-# }
+# ===== Function to break config files =====
+break_config_files() {
+    log_info "Breaking config files..."
+    for file in "${CONFIG_FILES[@]}"; do
+        if [ -f "$file" ]; then
+            # Create a backup
+            cp "$file" "${file}.bak"
+            # Create a broken version
+            echo "# This is a broken config file" > "$file"
+            echo "# Original content backed up to ${file}.bak" >> "$file"
+            log_info "Modified config file: $file"
+        fi
+    done
+    log_ok "Config files broken successfully"
+}
 
 # ===== Function to restore all =====
 restore_all() {
@@ -170,6 +173,14 @@ restore_all() {
     nft add chain inet filter forward { type filter hook forward priority 0 \; policy drop \; }
     nft add chain inet filter output { type filter hook output priority 0 \; policy accept \; }
     
+    # Restore config files
+    for file in "${CONFIG_FILES[@]}"; do
+        if [ -f "${file}.bak" ]; then
+            mv "${file}.bak" "$file"
+            log_info "Restored config file: $file"
+        fi
+    done
+    
     log_ok "All components restored successfully"
 }
 
@@ -181,7 +192,7 @@ case "$1" in
         break_passwd_package
         break_services
         break_firewall
-        # break_config_files
+        break_config_files
         ;;
     "restore")
         restore_all

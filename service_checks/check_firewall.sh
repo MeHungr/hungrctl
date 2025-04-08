@@ -5,9 +5,11 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 
 HOST="$(hostname)"
 MODE="${1:-check}"
-BASELINE_FILE="$BASELINE_DIR/nftables_rules.baseline"
+BASELINE_FILE="$FIREWALL_BASELINE_DIR/nftables_rules.baseline"
 TEMP_FILE="$(mktemp "$TMP_DIR/current_nftables_rules.XXXXXX")"
 SUMMARY_LOG="$SUMMARY_DIR/check_firewall.summary"
+# Create the summary log file if it doesn't exist
+# and clear it.
 touch "$SUMMARY_LOG"
 > "$SUMMARY_LOG"
 trap 'rm -f "$TEMP_FILE"' EXIT
@@ -22,15 +24,6 @@ fi
 if ! command -v nft &>/dev/null; then
     log_warn "nft command not found. Skipping firewall check."
     exit 2
-fi
-
-# ===== Ensure baseline directory exists =====
-if [ ! -d "$BASELINE_DIR" ]; then
-    log_warn "Baseline directory $BASELINE_DIR does not exist. Creating it now..."
-    mkdir -p "$BASELINE_DIR" || {
-        log_fail "Could not create baseline directory at $BASELINE_DIR"
-        exit 4
-    }
 fi
 
 # ===== Ensure baseline file exists =====
