@@ -62,6 +62,7 @@ if [ -s "$TEMP_LOG" ]; then
     echo "Failed files:" >> "$SUMMARY_LOG"
     echo "----------------------------------------" >> "$SUMMARY_LOG"
     cat "$TEMP_LOG" >> "$SUMMARY_LOG"
+    echo "----------------------------------------" >> "$SUMMARY_LOG"
     # ===== If login package is modified, we need to reinstall it. =====
     if [ "$AUTO_REINSTALL_LOGIN_PACKAGE" = true ]; then
         log_info "Attempting to reinstall login package..."
