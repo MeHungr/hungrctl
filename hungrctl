@@ -56,10 +56,27 @@ show_help() {
     echo "Options:"
     echo "  -a, --all     Run all checks"
     echo "  -h, --help    Show this help message"
+    echo "  -c, --config  Run config check"
+    echo "  -f, --firewall Run firewall check"
+    echo "  -l, --login   Run login package check"
+    echo "  -m, --mode    Run in check or baseline mode"
+    echo "  -p, --passwd  Run passwd package check"
+    echo "  -s, --services Run services check"
+    echo "  -u, --coreutils Run coreutils check"
     echo
     echo "Modes:"
     echo "  check         Run service and system checks (default)"
     echo "  baseline      Create or update baseline files"
+
+    echo "Examples:"
+    echo "  $0 --all"
+    echo "  $0 --config"
+    echo "  $0 -f"
+    echo "  $0 --login"
+    echo "  $0 -p"
+    echo "  $0 --services"
+    echo "  $0 -u"
+    echo "  $0 -am baseline"
 }
 
 # ===== Source unified environment setup =====
@@ -71,19 +88,8 @@ if [ "$EUID" -ne 0 ]; then
 	exit 1
 fi
 
-# ===== Parse Mode =====
-MODE="${1:-check}"
-
-case "$MODE" in
-    check|baseline)
-        log_info "Running in $MODE mode"
-        ;;
-    *)
-        log_fail "Unknown mode: $MODE"
-        echo "Run '$0 help' for usage."
-        exit 1
-        ;;
-esac
+# ===== Default Mode =====
+MODE="check"
 
 # ===== Log Files =====
 FULL_LOG="$LOG_DIR/service_check_full.log"
@@ -118,7 +124,7 @@ if ! command -v getopt &> /dev/null; then
 fi
 
 # ===== Flags =====
-OPTS=$(getopt -o "acfhlpsu" --long "all,firewall,config,services,coreutils,login,passwd,help" -- "$@")
+OPTS=$(getopt -o "acfhlm:psu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:" -- "$@")
 eval set -- "$OPTS"
 
 while true; do
@@ -142,6 +148,10 @@ while true; do
         -l|--login)
             run_check "$ROOT_DIR/service_checks/check_login_package.sh"
             shift
+            ;;
+        -m|--mode)
+            MODE="$2"
+            shift 2
             ;;
         -p|--passwd)
             run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
