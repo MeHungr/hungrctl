@@ -50,12 +50,6 @@ for svc in "${SERVICES[@]}"; do
     esac
 done
 
-{
-    echo
-    [[ ${#FAILED_SERVICES[@]} -gt 0 ]] && echo "Failed Services:" && printf '• %s\n' "${FAILED_SERVICES[@]}" && echo
-    [[ ${#INACTIVE_SERVICES[@]} -gt 0 ]] && echo "Inactive Services:" && printf '• %s\n' "${INACTIVE_SERVICES[@]}" && echo
-} >> "$SUMMARY_LOG"
-
 # ===== Auto-restart logic =====
 if [ "$AUTO_RESTART" = true ]; then
 	for svc in "${FAILED_SERVICES[@]}" "${INACTIVE_SERVICES[@]}"; do
@@ -82,9 +76,12 @@ if [[ ${#FAILED_SERVICES[@]} -eq 0 && ${#INACTIVE_SERVICES[@]} -eq 0 && ${#RESTA
 	exit 0
 fi
 
-# ===== Generate summary log =====
+# ===== Generate summary log only if there are issues =====
 {
+    echo "[$HOST] Service check failed at $(timestamp)"
     echo
+    [[ ${#FAILED_SERVICES[@]} -gt 0 ]] && echo "Failed Services:" && printf '• %s\n' "${FAILED_SERVICES[@]}" && echo
+    [[ ${#INACTIVE_SERVICES[@]} -gt 0 ]] && echo "Inactive Services:" && printf '• %s\n' "${INACTIVE_SERVICES[@]}" && echo
     [[ ${#RESTARTED_SERVICES[@]} -gt 0 ]] && echo "Restarted Successfully:" && printf '• %s\n' "${RESTARTED_SERVICES[@]}" && echo
     [[ ${#RESTART_FAILS[@]} -gt 0 ]] && echo "Restart Failed:" && printf '• %s\n' "${RESTART_FAILS[@]}" && echo
-    } >> "$SUMMARY_LOG"
+} >> "$SUMMARY_LOG"
