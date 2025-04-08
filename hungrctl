@@ -124,28 +124,35 @@ if ! command -v getopt &> /dev/null; then
 fi
 
 # ===== Flags =====
-OPTS=$(getopt -o "acfhlm:psu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:" -- "$@")
+OPTS=$(getopt -o "acfhlm:psu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:" -n "$0" -- "$@")
+if [ $? -ne 0 ]; then
+    show_help
+    exit 1
+fi
+
 eval set -- "$OPTS"
+
+# Default to running all checks if no specific check is specified
+run_all=true
 
 while true; do
     case "$1" in
         -a|--all)
-            run_all_checks
+            run_all=true
             shift
             ;;
-        -h|--help)
-            show_help
-            exit 0
-            ;;
         -c|--config)
+            run_all=false
             run_check "$ROOT_DIR/service_checks/check_config.sh"
             shift
             ;;
         -f|--firewall)
+            run_all=false
             run_check "$ROOT_DIR/service_checks/check_firewall.sh"
             shift
             ;;
         -l|--login)
+            run_all=false
             run_check "$ROOT_DIR/service_checks/check_login_package.sh"
             shift
             ;;
@@ -154,24 +161,54 @@ while true; do
             shift 2
             ;;
         -p|--passwd)
+            run_all=false
             run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
             shift
             ;;
         -s|--services)
+            run_all=false
             run_check "$ROOT_DIR/service_checks/check_services.sh"
             shift
             ;;
         -u|--coreutils)
+            run_all=false
             run_check "$ROOT_DIR/service_checks/check_coreutils.sh"
             shift
-            ;;        
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
         *)
             log_fail "Unknown option: $1"
-            echo "Run '$0 -h|--help' for usage."
+            show_help
             exit 1
             ;;
     esac
 done
+
+# Handle the mode argument if it's provided after --
+if [ $# -gt 0 ]; then
+    case "$1" in
+        check|baseline)
+            MODE="$1"
+            ;;
+        *)
+            log_fail "Unknown mode: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+fi
+
+# Run all checks if no specific check was specified
+if [ "$run_all" = true ]; then
+    run_all_checks
+fi
 
 # ===== Final Discord Summary =====
 if [ "$DISCORD" = true ]; then
