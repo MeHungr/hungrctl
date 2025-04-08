@@ -23,7 +23,6 @@ run_check() {
 
     # Append summary to full summary
     if [ -e "$summary_log" ]; then
-        echo "[$HOST] $label check completed at $(timestamp)" >> "$FULL_SUMMARY"
         echo >> "$FULL_SUMMARY"
         cat "$summary_log" >> "$FULL_SUMMARY"
         echo >> "$FULL_SUMMARY"
