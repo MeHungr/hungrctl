@@ -1,5 +1,67 @@
 #!/bin/bash
 
+# ===== Function: run_check =====
+run_check() {
+    local script_path="$1"
+    local label
+    label="$(basename "$script_path" .sh)"
+    local temp_log="$TMP_DIR/${label}_check.log"
+    local summary_log="$SUMMARY_DIR/${label}.summary"
+
+    log_info "[RUNNING] $label" >> "$RUN_LOG"
+
+    # Run the check quietly, capture output to a temp log
+    "$script_path" "$mode" > "$temp_log" 2>&1
+
+    # Append to persistent logs
+    cat "$temp_log" >> "$RUN_LOG"
+    cat "$temp_log" >> "$FULL_LOG"
+
+    log_info "[DONE] $label" >> "$RUN_LOG"
+
+    if [ "$DISCORD" = true ]; then
+        local summary_content
+        summary_content="$(cat "$summary_log")"
+        local base="${label#check_}"
+        local upper_base="${base^^}"
+        local var_name="${upper_base}_WEBHOOK_URL"
+        local webhook="${!var_name}"
+
+        if [[ -n "$webhook" && -s "$summary_log" ]]; then
+            send_discord_alert "$summary_content" "${upper_base} Alert on $(hostname) at $(timestamp)" "$webhook"
+        fi
+        echo >> "$RUN_LOG"
+    fi
+}
+
+# ===== Function: run_all_checks =====
+run_all_checks() {
+    run_check "$ROOT_DIR/service_checks/check_firewall.sh"
+    run_check "$ROOT_DIR/service_checks/check_config.sh"
+    run_check "$ROOT_DIR/service_checks/check_services.sh"
+    run_check "$ROOT_DIR/service_checks/check_coreutils.sh"
+    run_check "$ROOT_DIR/service_checks/check_login_package.sh"
+    run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
+}
+
+# ===== Function: show_log_summary =====
+show_log_summary() {
+    (cat "$RUN_LOG"; echo -e "${green}Done! The full log can be viewed at: ${yellow}$FULL_LOG${reset}") | less -R
+}
+
+# ===== Function: show_help =====
+show_help() {
+    echo "Usage: $0 [OPTIONS] [check|baseline]"
+    echo
+    echo "Options:"
+    echo "  -a, --all     Run all checks"
+    echo "  -h, --help    Show this help message"
+    echo
+    echo "Modes:"
+    echo "  check         Run service and system checks (default)"
+    echo "  baseline      Create or update baseline files"
+}
+
 # ===== Source unified environment setup =====
 source "$(dirname "$(realpath "$0")")/lib/env.sh"
 
@@ -15,12 +77,6 @@ MODE="${1:-check}"
 case "$MODE" in
     check|baseline)
         log_info "Running in $MODE mode"
-        ;;
-    help|--help|-h)
-        echo "Usage: $0 [check|baseline]"
-        echo "  check     - run service and system checks (default)"
-        echo "  baseline  - create or update baseline files"
-        exit 0
         ;;
     *)
         log_fail "Unknown mode: $MODE"
@@ -46,55 +102,66 @@ RUN_LOG="$LOG_DIR/service_check.log"
     echo
 } >> "$RUN_LOG"
 
-# ===== Function: run_check =====
-run_check() {
-    local script_path="$1"
-    local label
-    label="$(basename "$script_path" .sh)"
-    local temp_log="$TMP_DIR/${label}_check.log"
-    local summary_log="$SUMMARY_DIR/${label}.summary"
+# ===== Check for getopt installation =====
+if ! command -v getopt &> /dev/null; then
+    case "$DISTRO" in
+        ubuntu|debian)
+            apt-get install -y getopt
+            ;;
+        rhel|centos|fedora)
+            dnf install -y getopt
+            ;;
+        arch|manjaro)
+            pacman -S --noconfirm getopt
+            ;;
+    esac
+fi
 
-    log_info "[RUNNING] $label" >> "$RUN_LOG"
+# ===== Flags =====
+OPTS=$(getopt -o "acfhlpsu" --long "all,firewall,config,services,coreutils,login,passwd,help" -- "$@")
+eval set -- "$OPTS"
 
-    # Run the check quietly, capture output to a temp log
-    "$script_path" "$mode" > "$temp_log" 2>&1
-
-    # Append to persistent logs
-    cat "$temp_log" >> "$RUN_LOG"
-    cat "$temp_log" >> "$FULL_LOG"
-
-    log_info "[DONE] $label" >> "$RUN_LOG"
-
-    
-    if [ "$DISCORD" = true ]; then
-        local summary_content
-        summary_content="$(cat "$summary_log")"
-        local base="${label#check_}"
-        local upper_base="${base^^}"
-        local var_name="${upper_base}_WEBHOOK_URL"
-        local webhook="${!var_name}"
-
-        if [[ -n "$webhook" && -s "$summary_log" ]]; then
-            send_discord_alert "$summary_content" "${upper_base} Alert on $(hostname) at $(timestamp)" "$webhook"
-        fi
-	echo >> "$RUN_LOG"
-    fi
-}
-
-
-# ===== Function: show_log_summary =====
-show_log_summary() {
-    (cat "$RUN_LOG"; echo -e "${green}Done! The full log can be viewed at: ${yellow}$FULL_LOG${reset}") | less -R
-}
-
-# ===== Run All Checks =====
-run_check "$ROOT_DIR/service_checks/check_firewall.sh"
-run_check "$ROOT_DIR/service_checks/check_config.sh"
-run_check "$ROOT_DIR/service_checks/check_services.sh"
-run_check "$ROOT_DIR/service_checks/check_coreutils.sh"
-run_check "$ROOT_DIR/service_checks/check_login_package.sh"
-run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
-
+while true; do
+    case "$1" in
+        -a|--all)
+            run_all_checks
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -c|--config)
+            run_check "$ROOT_DIR/service_checks/check_config.sh"
+            shift
+            ;;
+        -f|--firewall)
+            run_check "$ROOT_DIR/service_checks/check_firewall.sh"
+            shift
+            ;;
+        -l|--login)
+            run_check "$ROOT_DIR/service_checks/check_login_package.sh"
+            shift
+            ;;
+        -p|--passwd)
+            run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
+            shift
+            ;;
+        -s|--services)
+            run_check "$ROOT_DIR/service_checks/check_services.sh"
+            shift
+            ;;
+        -u|--coreutils)
+            run_check "$ROOT_DIR/service_checks/check_coreutils.sh"
+            shift
+            ;;        
+        *)
+            log_fail "Unknown option: $1"
+            echo "Run '$0 -h|--help' for usage."
+            exit 1
+            ;;
+    esac
+done
 
 # ===== Final Discord Summary =====
 if [ "$DISCORD" = true ]; then
