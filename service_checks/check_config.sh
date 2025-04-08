@@ -6,12 +6,10 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
 HOST="$(hostname)"
 MODE="${1:-check}"
 SUMMARY_LOG="$SUMMARY_DIR/check_config.summary"
-TEMP_LOG="$(mktemp "$TMP_DIR/config_files_check.XXXXXX")"
 # Create the summary log file if it doesn't exist
 # and clear it.
 touch "$SUMMARY_LOG"
 > "$SUMMARY_LOG"
-trap 'rm -f "$TEMP_LOG"' EXIT
 
 # ===== Ensure root =====
 if [ "$EUID" -ne 0 ]; then
@@ -68,6 +66,7 @@ for file in "${CONFIG_FILES[@]}"; do
     if ! diff -q "$file" "$baseline_file" >/dev/null; then
         log_warn "$file differs from baseline."
         MODIFIED_FILES+=("$file")
+        diff -u "$file" "$baseline_file"
 
         if [ "$AUTO_RESTORE_CONFIG_FILES" = true ]; then
             cp "$baseline_file" "$file"
