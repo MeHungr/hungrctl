@@ -15,9 +15,11 @@ run_check() {
 
     # Append to persistent logs
     cat "$temp_log" >> "$RUN_LOG"
-    cat "$temp_log" >> "$FULL_LOG"
 
     log_info "[DONE] $label" >> "$RUN_LOG"
+
+    # Append to full log
+    cat "$RUN_LOG" >> "$FULL_LOG"
 
     if [ "$DISCORD" = true ]; then
         local summary_content
