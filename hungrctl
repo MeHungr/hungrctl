@@ -55,6 +55,7 @@ show_help() {
     echo
     echo "This script runs a series of checks on the system to ensure it's running optimally."
     echo "Provided no arguments, it will run all checks in check mode."
+    echo
     echo "Options:"
     echo "  -a, --all     Run all checks"
     echo "  -h, --help    Show this help message"
@@ -69,7 +70,7 @@ show_help() {
     echo "Modes:"
     echo "  check         Run service and system checks (default)"
     echo "  baseline      Create or update baseline files"
-
+    echo
     echo "Examples:"
     echo "  $0"
     echo "  $0 --all"
