@@ -23,6 +23,7 @@ SERVICES_WEBHOOK_URL="https://discord.com/api/webhooks/1357540015390851084/yCGD8
 COREUTILS_WEBHOOK_URL="https://discord.com/api/webhooks/1358728376109633647/2Afj4XMZV-OA3YV7_zTyQ3lKQhwyr5PRhXcvoTp4Y4I2uLGQohqvGENxqmdnuCDd7ga1"
 LOGIN_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358985167062040737/oTSb0A6jURHDI8CMMow96AHS1-br9AXh_vgNzOiumZWVSN1fz1FnREko2VVZJcoI_7wv"
 PASSWD_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358990134032334930/m9j0XBEypsrejpXZzt29evzPmhTutviipsSzoGUoJPMVXFcpURvPk1g_oonX8hgdBB6P"
+CONFIG_WEBHOOK_URL="https://discord.com/api/webhooks/1359016250126110856/LtEaAvWMfXPvO8bO3OyyyCPCpH2gVQOoCUj-sdymvko3C2aX9tod0q1t4-6T_PASXclF"
 
 # ===== GENERAL CONFIGURATION =====
 AUTO_RESTART=true # Automatically restart services that are down
