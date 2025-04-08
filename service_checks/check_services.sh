@@ -73,7 +73,7 @@ if [ "$AUTO_RESTART" = true ]; then
 		fi
 	done
 else
-    log_warn "Automatic service restarts are disabled. Check config.sh to re-enable. Skipping..." >> "$SUMMARY_LOG"
+    log_warn "Automatic service restarts are disabled. Check config.sh to re-enable. Skipping..."
 fi
 
 # ===== Determine if something went wrong and log it =====
