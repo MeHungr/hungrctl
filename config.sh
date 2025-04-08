@@ -22,9 +22,11 @@ FIREWALL_WEBHOOK_URL="https://discord.com/api/webhooks/1357498435917320392/_dN25
 SERVICES_WEBHOOK_URL="https://discord.com/api/webhooks/1357540015390851084/yCGD831GobtmiILHlnFDFl5tXzkK4r7hBYSxVg0KfaKsAq3PmseBmzWlAGFXYhQckxOP"
 COREUTILS_WEBHOOK_URL="https://discord.com/api/webhooks/1358728376109633647/2Afj4XMZV-OA3YV7_zTyQ3lKQhwyr5PRhXcvoTp4Y4I2uLGQohqvGENxqmdnuCDd7ga1"
 LOGIN_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358985167062040737/oTSb0A6jURHDI8CMMow96AHS1-br9AXh_vgNzOiumZWVSN1fz1FnREko2VVZJcoI_7wv"
+PASSWD_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358990134032334930/m9j0XBEypsrejpXZzt29evzPmhTutviipsSzoGUoJPMVXFcpURvPk1g_oonX8hgdBB6P"
 
 # ===== GENERAL CONFIGURATION =====
 AUTO_RESTART=true # Automatically restart services that are down
 AUTO_REINSTALL_COREUTILS=true # Automatically reinstall coreutils if it's missing
 AUTO_REINSTALL_LOGIN_PACKAGE=true # Automatically reinstall login package if it's missing
+AUTO_REINSTALL_PASSWD_PACKAGE=true # Automatically reinstall passwd package if it's missing
 DISCORD=true # Send messages to discord using webhooks? If yes, make sure you add the webhook links
