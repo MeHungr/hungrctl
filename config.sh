@@ -26,4 +26,5 @@ LOGIN_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358985167062040737/
 # ===== GENERAL CONFIGURATION =====
 AUTO_RESTART=true # Automatically restart services that are down
 AUTO_REINSTALL_COREUTILS=true # Automatically reinstall coreutils if it's missing
+AUTO_REINSTALL_LOGIN_PACKAGE=true # Automatically reinstall login package if it's missing
 DISCORD=true # Send messages to discord using webhooks? If yes, make sure you add the webhook links
