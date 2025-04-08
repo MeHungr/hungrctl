@@ -26,7 +26,10 @@ PASSWD_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358990134032334930
 
 # ===== GENERAL CONFIGURATION =====
 AUTO_RESTART=true # Automatically restart services that are down
+AUTO_RESTORE_CONFIG_FILES=true # Automatically restore config files from baseline if they're modified
+AUTO_RESTORE_FIREWALL=true # Automatically restore firewall ruleset from baseline if it's modified
 AUTO_REINSTALL_COREUTILS=true # Automatically reinstall coreutils if it's missing
 AUTO_REINSTALL_LOGIN_PACKAGE=true # Automatically reinstall login package if it's missing
 AUTO_REINSTALL_PASSWD_PACKAGE=true # Automatically reinstall passwd package if it's missing
+
 DISCORD=true # Send messages to discord using webhooks? If yes, make sure you add the webhook links

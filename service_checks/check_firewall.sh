@@ -53,26 +53,33 @@ compare_ruleset() {
         log_fail "The nftables ruleset differs from baseline."
         diff -u "$BASELINE_FILE" "$TEMP_FILE"
 
-        log_info "Restoring baseline ruleset..."
-        nft flush ruleset
-        nft -f "$BASELINE_FILE"
+        if [ "$AUTO_RESTORE_FIREWALL" = true ]; then
+            log_info "Restoring baseline ruleset..."
+            nft flush ruleset
+            nft -f "$BASELINE_FILE"
 
-        if [ $? -eq 0 ]; then
-            nft list ruleset > /etc/nftables.conf
-            systemctl restart nftables
-            systemctl enable nftables
-            log_ok "Baseline firewall ruleset restored."
+            if [ $? -eq 0 ]; then
+                nft list ruleset > /etc/nftables.conf
+                systemctl restart nftables
+                systemctl enable nftables
+                log_ok "Baseline firewall ruleset restored."
 
-            event_log "RESTORE" "Baseline firewall ruleset restored due to mismatch"
+                event_log "RESTORE" "Baseline firewall ruleset restored due to mismatch"
 
-            echo "[$HOST] Baseline firewall ruleset was restored due to a mismatch at $(timestamp)" > "$SUMMARY_LOG"
-            exit 10
+                echo "[$HOST] Baseline firewall ruleset was restored due to a mismatch at $(timestamp)" > "$SUMMARY_LOG"
+                exit 10
+            else
+                log_fail "Failed to restore baseline ruleset."
+                event_log "RESTORE-FAIL" "Attempted to restore firewall ruleset but failed"
+
+                echo "[$HOST] Firewall ruleset failed to restore after mismatch at $(timestamp)" > "$SUMMARY_LOG"
+                exit 11
+            fi
         else
-            log_fail "Failed to restore baseline ruleset."
-            event_log "RESTORE-FAIL" "Attempted to restore firewall ruleset but failed"
-
-            echo "[$HOST] Firewall ruleset failed to restore after mismatch at $(timestamp)" > "$SUMMARY_LOG"
-            exit 11
+            log_warn "Automatic firewall restoration is disabled. Check config.sh to re-enable."
+            event_log "FIREWALL-MODIFIED" "Firewall ruleset modified on $HOST"
+            echo "[$HOST] Firewall ruleset differs from baseline at $(timestamp)" > "$SUMMARY_LOG"
+            exit 10
         fi
     else
         log_ok "Firewall ruleset matches baseline."
