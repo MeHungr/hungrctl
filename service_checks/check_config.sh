@@ -99,6 +99,11 @@ if [[ ${#MISSING_FILES[@]} -gt 0 || ${#MODIFIED_FILES[@]} -gt 0 ]]; then
     log_warn "Config file check completed with issues."
     exit 10
 else
-    log_ok "All config files validated successfully."
-    exit 0
+    if [ "$MODE" = "baseline" ]; then
+        log_ok "Baselines updated for all config files."
+        exit 0
+    else
+        log_ok "All config files validated successfully."
+        exit 0
+    fi
 fi
