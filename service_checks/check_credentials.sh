@@ -263,7 +263,6 @@ update_baseline() {
         current_file="$file"
         if diff -u "$baseline_file" "$current_file" > /dev/null; then
             log_ok "No differences found. Baseline for $current_file already up to date." >> "$SUMMARY_LOG"
-            exit 0
         else
             log_warn "Differences detected in $current_file:"
             
@@ -276,13 +275,11 @@ update_baseline() {
                 event_log "BASELINE-UPDATED" "User approved and updated the $current_file baseline"
 
                 echo "[$HOST] Baseline for $current_file was updated via baseline mode at $(timestamp)" >> "$SUMMARY_LOG"
-                exit 0
             else
                 log_info "Baseline update canceled."
                 event_log "BASELINE-CANCELED" "User canceled the $current_file baseline update"
 
                 echo "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" >> "$SUMMARY_LOG"
-                exit 7
             fi
         fi
     done

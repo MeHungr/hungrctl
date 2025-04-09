@@ -38,7 +38,6 @@ for file in "${CONFIG_FILES[@]}"; do
     if [ "$MODE" = "baseline" ]; then
         if diff -u "$baseline_file" "$file" > /dev/null; then
             log_ok "No differences found. Baseline already up to date." >> "$SUMMARY_LOG"
-            exit 0
         else
             log_warn "Differences detected in $file:"
             diff -u "$baseline_file" "$file"
@@ -49,40 +48,39 @@ for file in "${CONFIG_FILES[@]}"; do
                 event_log "BASELINE-UPDATED" "User approved and updated the $file baseline"
 
                 echo "[$HOST] Baseline for $file was updated via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
-                exit 0
             else
                 log_info "Baseline update canceled."
                 event_log "BASELINE-CANCELED" "User canceled the $file baseline update"
 
                 echo "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
-                exit 7
             fi
         fi
         continue
-    fi
-
-    if [ ! -f "$baseline_file" ]; then
-        log_warn "No baseline exists for $file. Creating one now..."
-        cp "$file" "$baseline_file"
-        chattr +i "$baseline_file"
-        log_ok "Baseline created for $file"
-        continue
-    fi
-
-    if [ ! -e "$file" ]; then
-        log_warn "$file is missing"
-        MISSING_FILES+=("$file")
-
-        if [ "$AUTO_RESTORE_CONFIG_FILES" = true ]; then
-            cp "$baseline_file" "$file"
-            log_ok "$file restored from baseline."
-            RESTORED_FILES+=("$file")
-            event_log "CONFIG-RESTORE" "$file was missing and restored from baseline on $HOST"
-        else
-            event_log "CONFIG-MISSING" "$file is missing on $HOST"
+    else
+        if [ ! -f "$baseline_file" ]; then
+            log_warn "No baseline exists for $file. Creating one now..."
+            cp "$file" "$baseline_file"
+            chattr +i "$baseline_file"
+            log_ok "Baseline created for $file"
+            continue
         fi
-        continue
+
+        if [ ! -e "$file" ]; then
+            log_warn "$file is missing"
+            MISSING_FILES+=("$file")
+
+            if [ "$AUTO_RESTORE_CONFIG_FILES" = true ]; then
+                cp "$baseline_file" "$file"
+                log_ok "$file restored from baseline."
+                RESTORED_FILES+=("$file")
+                event_log "CONFIG-RESTORE" "$file was missing and restored from baseline on $HOST"
+            else
+                event_log "CONFIG-MISSING" "$file is missing on $HOST"
+            fi
+            continue
+        fi
     fi
+
 
     if ! diff -q "$file" "$baseline_file" >/dev/null; then
         log_warn "$file differs from baseline."
