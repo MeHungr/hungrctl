@@ -104,14 +104,16 @@ check_new_users() {
 
 check_modified_users() {
     log_info "Checking for modified users..."
-    
+
     if [ ! -f "$CREDENTIALS_BASELINE_DIR/passwd.baseline" ]; then
         log_warn "No baseline file found for modified users check."
         return
     fi
 
-    declare -A baseline_users current_users
     modified_found=false
+
+    declare -A baseline_users current_users
+    
 
     while IFS=: read -r user pass uid gid desc home shell; do
         baseline_users[$user]="$pass:$uid:$gid:$desc:$home:$shell"
