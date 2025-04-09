@@ -17,6 +17,12 @@ if [ "$EUID" -ne 0 ]; then
 	exit 1
 fi
 
+# ===== Exit if mode is baseline =====
+if [ "$MODE" = "baseline" ]; then
+    log_info "Services integrity check has no baseline mode."
+    exit 0
+fi
+
 # ===== Ensure SERVICES list is defined =====
 if [[ ${#SERVICES[@]} -eq 0 ]]; then
 	log_warn "No SERVICES defined in .env - skipping service checks."

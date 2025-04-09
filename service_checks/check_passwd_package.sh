@@ -19,6 +19,12 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# ===== Exit if mode is baseline =====
+if [ "$MODE" = "baseline" ]; then
+    log_info "Passwd package integrity check has no baseline mode."
+    exit 0
+fi
+
 # ===== Detect distro and check passwd package integrity =====
 case "$DISTRO" in
     ubuntu|debian)

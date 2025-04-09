@@ -120,6 +120,7 @@ chown -R root:root "$ROOT_DIR"
 # Allow config & output to remain visible
 chmod 600 "$ROOT_DIR/config.sh"
 chmod -R 600 "$OUTPUT_DIR"
+chmod -R 666 "$LOG_DIR" "$SUMMARY_DIR"
 
 # Lock check scripts & main script
 find "$ROOT_DIR/service_checks" -type f -exec chattr +i {} \;

@@ -103,7 +103,7 @@ if [[ "$MODE" == "baseline" ]]; then
 
         read -p "Overwrite existing baseline with current ruleset? [y/N]: " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            mv "$TEMP_FILE" "$BASELINE_FILE"
+            cp "$TEMP_FILE" "$BASELINE_FILE"
             log_ok "Baseline updated successfully."
             event_log "BASELINE-UPDATED" "User approved and updated the firewall baseline"
 

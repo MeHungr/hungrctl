@@ -97,7 +97,7 @@ elif [ "$MODE" = "baseline" ]; then
 
         read -p "Overwrite existing baseline with current ruleset? [y/N]: " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            mv "$temp_file" "$baseline_file"
+            cp "$temp_file" "$baseline_file"
             log_ok "Baseline updated successfully."
             event_log "BASELINE-UPDATED" "User approved and updated the cron job baseline"
 
