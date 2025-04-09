@@ -166,6 +166,8 @@ check_modified_users() {
                 event_log "SHELL-CHANGE" "Shell change for $user: $b_shell -> $c_shell"
                 echo "[$HOST] Shell change for $user: $b_shell -> $c_shell at $(timestamp)" >> "$SUMMARY_LOG"
             fi
+        if modified_found = false; then
+            log_ok "No modified users found."
         fi
     done
 }
@@ -210,6 +212,9 @@ check_uid_0_clones() {
             echo "[$HOST] UID 0 clone detected: $user at $(timestamp)" >> "$SUMMARY_LOG"
         fi
     done
+    if "$clones_found" = false; then
+        log_ok "No UID 0 clones detected."
+    fi
 }
 
 restore_credentials() {
