@@ -166,7 +166,8 @@ check_modified_users() {
                 event_log "SHELL-CHANGE" "Shell change for $user: $b_shell -> $c_shell"
                 echo "[$HOST] Shell change for $user: $b_shell -> $c_shell at $(timestamp)" >> "$SUMMARY_LOG"
             fi
-        done
+        fi
+    done
     if [ "$modified_found" = false ]; then
         log_ok "No modified users found."
     fi
