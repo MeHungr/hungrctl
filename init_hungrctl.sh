@@ -85,7 +85,7 @@ After=multi-user.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/hungrctl/watchdog
+ExecStart=$ROOT_DIR/watchdog
 User=root
 EOF
 chmod 600 "$watchdog_dest"
