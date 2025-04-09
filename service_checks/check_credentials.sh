@@ -257,20 +257,26 @@ restore_credentials() {
 update_baseline() {
     echo "------------Baseline Update------------" >> "$SUMMARY_LOG"
     echo "[$HOST] credential baseline files were updated at $(timestamp)" >> "$SUMMARY_LOG"
-    for file in "$CREDENTIALS_BASELINE_DIR/passwd.baseline" "/etc/passwd" "$CREDENTIALS_BASELINE_DIR/shadow.baseline" "/etc/shadow" "$CREDENTIALS_BASELINE_DIR/group.baseline" "/etc/group"; do
-        baseline_file="$CREDENTIALS_BASELINE_DIR/$file"
-        shift
-        current_file="$file"
+    
+    # Define the pairs of baseline files and their real locations
+    declare -A file_pairs=(
+        ["$CREDENTIALS_BASELINE_DIR/passwd.baseline"]="/etc/passwd"
+        ["$CREDENTIALS_BASELINE_DIR/shadow.baseline"]="/etc/shadow"
+        ["$CREDENTIALS_BASELINE_DIR/group.baseline"]="/etc/group"
+    )
+
+    for baseline_file in "${!file_pairs[@]}"; do
+        current_file="${file_pairs[$baseline_file]}"
+        
         if diff -u "$baseline_file" "$current_file" > /dev/null; then
             log_ok "No differences found. Baseline for $current_file already up to date." >> "$SUMMARY_LOG"
         else
             log_warn "Differences detected in $current_file:"
-            
             diff -u "$baseline_file" "$current_file"
 
             read -p "Overwrite existing baseline with current ruleset? [y/N]: " confirm
             if [[ "$confirm" =~ ^[Yy]$ ]]; then
-                cp "$baseline_file" "$current_file"
+                cp "$current_file" "$baseline_file"
                 log_ok "Baseline updated successfully."
                 event_log "BASELINE-UPDATED" "User approved and updated the $current_file baseline"
 
