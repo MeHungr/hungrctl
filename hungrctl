@@ -51,6 +51,7 @@ run_all_checks() {
     run_check "$ROOT_DIR/service_checks/check_login_package.sh"
     run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
     run_check "$ROOT_DIR/service_checks/check_credentials.sh"
+    run_check "$ROOT_DIR/service_checks/check_cron.sh"
 }
 
 # ===== Function: show_log_summary =====
@@ -148,7 +149,7 @@ if [ $# -gt 0 ]; then
 fi
 
 # Now parse the remaining options
-OPTS=$(getopt -o "acdfhlm:npsu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:,no-summary,credentials" -n "$0" -- "$@")
+OPTS=$(getopt -o "acdfhlm:nprsu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:,no-summary,credentials,cron" -n "$0" -- "$@")
 if [ $? -ne 0 ]; then
     show_help
     exit 1
@@ -199,6 +200,11 @@ while true; do
         -p|--passwd)
             run_all=false
             run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
+            shift
+            ;;
+        -r|--cron)
+            run_all=false
+            run_check "$ROOT_DIR/service_checks/check_cron.sh"
             shift
             ;;
         -s|--services)

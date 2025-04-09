@@ -25,6 +25,7 @@ LOGIN_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358985167062040737/
 PASSWD_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358990134032334930/m9j0XBEypsrejpXZzt29evzPmhTutviipsSzoGUoJPMVXFcpURvPk1g_oonX8hgdBB6P"
 CONFIG_WEBHOOK_URL="https://discord.com/api/webhooks/1359016250126110856/LtEaAvWMfXPvO8bO3OyyyCPCpH2gVQOoCUj-sdymvko3C2aX9tod0q1t4-6T_PASXclF"
 CREDENTIALS_WEBHOOK_URL="https://discord.com/api/webhooks/1359406579388256398/7uKmYly90C20xyVKJDJbBQu1DgdGCnCv7lGliG6KjBNHQx1k97X-dNRjV5KgZPTqkfWV"
+CRON_WEBHOOK_URL="fake"
 
 # ===== GENERAL CONFIGURATION =====
 AUTO_RESTART=true # Automatically restart services that are down
