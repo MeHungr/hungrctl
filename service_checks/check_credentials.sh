@@ -104,26 +104,35 @@ check_new_users() {
 
 check_modified_users() {
     log_info "Checking for modified users..."
-
+    
     if [ ! -f "$CREDENTIALS_BASELINE_DIR/passwd.baseline" ]; then
         log_warn "No baseline file found for modified users check."
         return
     fi
 
     modified_found=false
-
     declare -A baseline_users current_users
-    
 
+    # Debug: Count entries in baseline
+    baseline_count=0
     while IFS=: read -r user pass uid gid desc home shell; do
         baseline_users[$user]="$pass:$uid:$gid:$desc:$home:$shell"
+        ((baseline_count++))
     done < "$CREDENTIALS_BASELINE_DIR/passwd.baseline"
+    log_info "Found $baseline_count users in baseline"
 
+    # Debug: Count entries in current passwd
+    current_count=0
     while IFS=: read -r user pass uid gid desc home shell; do
         current_users[$user]="$pass:$uid:$gid:$desc:$home:$shell"
+        ((current_count++))
     done < /etc/passwd
+    log_info "Found $current_count users in current passwd"
 
+    # Debug: Count users we'll check
+    check_count=0
     for user in "${!baseline_users[@]}"; do
+        ((check_count++))
         if [[ -n "${current_users[$user]}" ]]; then
             IFS=':' read -r b_pass b_uid b_gid b_desc b_home b_shell <<< "${baseline_users[$user]}"
             IFS=':' read -r c_pass c_uid c_gid c_desc c_home c_shell <<< "${current_users[$user]}"
@@ -169,9 +178,12 @@ check_modified_users() {
             fi
         fi
     done
+    log_info "Checked $check_count users for modifications"
 
     if [ "$modified_found" = false ]; then
         log_ok "No modified users found."
+    else
+        log_info "Found modified users"
     fi
 }
 
