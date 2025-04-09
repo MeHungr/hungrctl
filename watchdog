@@ -26,7 +26,7 @@ restore_unit() {
 }
 
 # ===== Check systemd units =====
-for unit in "$service" "$timer"; do
+for unit in "$timer"; do
     if ! systemctl is-enabled --quiet "$unit"; then
         log_warn "$unit is not enabled, attempting to restore..."
         restore_unit "$unit"
@@ -41,7 +41,7 @@ done
 # ===== Check key file integrity =====
 check_locked() {
     local file="$1"
-    if ! lsattr"$file" 2>/dev/null | grep -q '\-i-'; then
+    if ! lsattr "$file" 2>/dev/null | grep -q '\-i-'; then
         log_warn "$file is not immutable, attempting to restore..."
         chattr +i "$file"
         log_ok "Restored immutability to $file"
