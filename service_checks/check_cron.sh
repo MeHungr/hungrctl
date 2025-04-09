@@ -46,8 +46,8 @@ dump_cron() {
 }
 
 compare_cron() {
-    if [ -f "$baseline" ]; then
-        diff_output=$(diff -u "$baseline" "$temp_file")
+    if [ -f "$baseline_file" ]; then
+        diff_output=$(diff -u "$baseline_file" "$temp_file")
         if [ -n "$diff_output" ]; then
             log_warn "Cron job changes detected:"
             echo "$diff_output"
@@ -59,7 +59,7 @@ compare_cron() {
     else
         log_warn "No baseline file found for cron job changes. Creating one now..."
         dump_cron
-        cp "$temp_file" "$baseline"
+        cp "$temp_file" "$baseline_file"
         log_ok "Created a baseline file for cron job changes."
     fi
 }
