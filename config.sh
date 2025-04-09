@@ -11,7 +11,6 @@ SERVICES=("apache2" "ssh" "cron")
 CONFIG_FILES=("/etc/ssh/sshd_config" "/etc/apache2/apache2.conf")
 
 # ===== Directories =====
-CONTENT_DIRS=("/var/www/html")
 OUTPUT_DIR="./output"
 
 # ===== Webhooks =====
