@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# ===== Source environment and logging =====
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/lib/env.sh"
+
+# ===== This script must be run as root =====
+if [ "$EUID" -ne 0 ]; then
+    log_fail "This script must be run as root"
+    exit 1
+fi
+
+log_file="$ROOT_DIR/output/logs/watchdog.log"
+temp_log="$ROOT_DIR/output/logs/watchdog.tmp"
+service="hungrctl.service"
+timer="hungrctl.timer"
+trap 'rm -f "$temp_log"' EXIT
+
+# ===== Redirect output to log file =====
+exec > >(tee -a "$log_file") >> "$temp_log" 2>&1
+
+restore_unit() {
+    local unit="$1"
+    systemctl daemon-reexec
+    systemctl enable --now "$unit"
+    log_ok "Enabled and started $unit"
+}
+
+# ===== Check systemd units =====
+for unit in "$service" "$timer"; do
+    if ! systemctl is-enabled --quiet "$unit"; then
+        log_warn "$unit is not enabled, attempting to restore..."
+        restore_unit "$unit"
+    fi
+
+    if ! systemctl is-active --quiet "$unit"; then
+        log_warn "$unit is not running, attempting to restore..."
+        restore_unit "$unit"
+    fi
+done
+
+# ===== Check key file integrity =====
+check_locked() {
+    local file="$1"
+    if ! lsattr"$file" 2>/dev/null | grep -q '\-i-'; then
+        log_warn "$file is not immutable, attempting to restore..."
+        chattr +i "$file"
+        log_ok "Restored immutability to $file"
+    fi
+}
+
+check_locked "$ROOT_DIR/hungrctl"
+check_locked "$ROOT_DIR/service_checks"
+check_locked "/etc/systemd/system/$service"
+check_locked "/etc/systemd/system/$timer"
+
+# ===== Send Discord notification if enabled and issues are detected =====
+if [ "$DISCORD" = true ]; then
+    if [ -s "$temp_log" ]; then
+        send_discord_alert "$temp_log" "HungrCTL Watchdog Alert" "$WATCHDOG_WEBHOOK_URL"
+    fi
+fi
