@@ -260,6 +260,7 @@ if [ "$MODE" = "baseline" ]; then
     find "$BASELINE_DIR" -type f -exec chattr -i {} \;
     if [ -n "$cmd" ]; then
         "$cmd"
+    fi
     if [ "$run_all" = true ]; then
         run_all_checks "$MODE"
     else
