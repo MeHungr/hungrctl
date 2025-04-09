@@ -18,6 +18,8 @@ touch "$SUMMARY_LOG"
 > "$SUMMARY_LOG"
 trap "rm -f '$temp_file'" EXIT
 
+MODE="${1:-check}"
+
 dump_cron() {
     {
         echo "### /etc/crontab"
