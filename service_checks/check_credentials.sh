@@ -279,7 +279,7 @@ update_baseline() {
         
         # Compare files
         if diff -u "$baseline_file" "$current_file" > /dev/null; then
-            log_ok "No differences found. Baseline for $current_file already up to date." >> "$SUMMARY_LOG"
+            log_ok "No differences found. Baseline for $current_file already up to date." | tee -a "$SUMMARY_LOG"
         else
             log_warn "Differences detected in $current_file:"
             diff -u "$baseline_file" "$current_file"
