@@ -82,10 +82,14 @@ show_help() {
     echo "  -a, --all     Run all checks"
     echo "  -h, --help    Show this help message"
     echo "  -c, --config  Run config check"
+    echo "  -d, --credentials Run credentials check"
     echo "  -f, --firewall Run firewall check"
     echo "  -l, --login   Run login package check"
-    echo "  -m, --mode    Explicitly set mode to check or baseline"
+    echo "  -m, --mode <check|baseline>    Explicitly set mode to check or baseline"
+    echo "  -n, --no-summary Don't show the summary"
+    echo "  -o, --cron    Run cron check"
     echo "  -p, --passwd  Run passwd package check"
+    echo "  -r, --run <command>     Run a command before running checks. Useful for updating baseline files."
     echo "  -s, --services Run services check"
     echo "  -u, --coreutils Run coreutils check"
     echo
@@ -100,6 +104,8 @@ show_help() {
     echo "  $0 -f"
     echo "  $0 baseline"
     echo "  $0 -m baseline -f"
+    echo "  $0 -fr 'nft add rule inet filter input tcp dport 80 accept' baseline"
+    echo "  $0 -c --run 'echo \"test\" > /etc/ssh/sshd_config' --mode baseline"
 }
 
 # ===== Source unified environment setup =====
