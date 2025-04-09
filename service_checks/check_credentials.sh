@@ -27,6 +27,7 @@ check_passwd() {
     if [ ! -f "$CREDENTIALS_BASELINE_DIR/passwd.baseline" ]; then
         log_warn "No baseline file found at $CREDENTIALS_BASELINE_DIR/passwd.baseline. Creating one now..."
         cp /etc/passwd "$CREDENTIALS_BASELINE_DIR/passwd.baseline"
+        chattr +i "$CREDENTIALS_BASELINE_DIR/passwd.baseline"
         log_ok "Created a baseline file for passwd."
     fi
 
@@ -48,6 +49,7 @@ check_shadow() {
     if [ ! -f "$CREDENTIALS_BASELINE_DIR/shadow.baseline" ]; then
         log_warn "No baseline file found at $CREDENTIALS_BASELINE_DIR/shadow.baseline. Creating one now..."
         cp /etc/shadow "$CREDENTIALS_BASELINE_DIR/shadow.baseline"
+        chattr +i "$CREDENTIALS_BASELINE_DIR/shadow.baseline"s
         log_ok "Created a baseline file for shadow."
     fi
 
@@ -68,6 +70,7 @@ check_group() {
     if [ ! -f "$CREDENTIALS_BASELINE_DIR/group.baseline" ]; then
         log_warn "No baseline file found at $CREDENTIALS_BASELINE_DIR/group.baseline. Creating one now..."
         cp /etc/group "$CREDENTIALS_BASELINE_DIR/group.baseline"
+        chattr +i "$CREDENTIALS_BASELINE_DIR/group.baseline"
         log_ok "Created a baseline file for group."
     fi
 
@@ -252,14 +255,37 @@ restore_credentials() {
 }
 
 update_baseline() {
-    log_info "Updating baseline files..."
-    cp /etc/passwd "$CREDENTIALS_BASELINE_DIR/passwd.baseline"
-    cp /etc/shadow "$CREDENTIALS_BASELINE_DIR/shadow.baseline"
-    cp /etc/group "$CREDENTIALS_BASELINE_DIR/group.baseline"
-    log_ok "Updated baseline files."
-    event_log "BASELINE-UPDATE" "Updated baseline files"
     echo "------------Baseline Update------------" >> "$SUMMARY_LOG"
-    echo "[$HOST] baseline files were updated at $(timestamp)" >> "$SUMMARY_LOG"
+    echo "[$HOST] credential baseline files were updated at $(timestamp)" >> "$SUMMARY_LOG"
+    for file in "$CREDENTIALS_BASELINE_DIR/passwd.baseline" "/etc/passwd" "$CREDENTIALS_BASELINE_DIR/shadow.baseline" "/etc/shadow" "$CREDENTIALS_BASELINE_DIR/group.baseline" "/etc/group"; do
+        baseline_file="$CREDENTIALS_BASELINE_DIR/$file"
+        shift
+        current_file="$file"
+        if diff -u "$baseline_file" "$current_file" > /dev/null; then
+            log_ok "No differences found. Baseline for $current_file already up to date." >> "$SUMMARY_LOG"
+            exit 0
+        else
+            log_warn "Differences detected in $current_file:"
+            
+            diff -u "$baseline_file" "$current_file"
+
+            read -p "Overwrite existing baseline with current ruleset? [y/N]: " confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                cp "$baseline_file" "$current_file"
+                log_ok "Baseline updated successfully."
+                event_log "BASELINE-UPDATED" "User approved and updated the $current_file baseline"
+
+                echo "[$HOST] Baseline for $current_file was updated via baseline mode at $(timestamp)" >> "$SUMMARY_LOG"
+                exit 0
+            else
+                log_info "Baseline update canceled."
+                event_log "BASELINE-CANCELED" "User canceled the $current_file baseline update"
+
+                echo "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" >> "$SUMMARY_LOG"
+                exit 7
+            fi
+        fi
+    done
 }
 
 # ===== Default Mode: Check =====

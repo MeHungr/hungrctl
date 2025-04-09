@@ -33,17 +33,38 @@ RESTORED_FILES=()
 
 # ===== Run Checks =====
 for file in "${CONFIG_FILES[@]}"; do
-    baseline_file="$CONFIG_BASELINE_DIR/$(echo "$file" | sed 's|/|_|g').bak"
+    baseline_file="$CONFIG_BASELINE_DIR/$(echo "$file" | sed 's|/|_|g').baseline"
 
     if [ "$MODE" = "baseline" ]; then
-        cp "$file" "$baseline_file"
-        log_ok "Saved baseline for $file"
+        if diff -u "$baseline_file" "$file" > /dev/null; then
+            log_ok "No differences found. Baseline already up to date." >> "$SUMMARY_LOG"
+            exit 0
+        else
+            log_warn "Differences detected in $file:"
+            diff -u "$baseline_file" "$file"
+            read -p "Overwrite existing baseline with current ruleset? [y/N]: " confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                cp "$file" "$baseline_file"
+                log_ok "Baseline updated successfully."
+                event_log "BASELINE-UPDATED" "User approved and updated the $file baseline"
+
+                echo "[$HOST] Baseline for $file was updated via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
+                exit 0
+            else
+                log_info "Baseline update canceled."
+                event_log "BASELINE-CANCELED" "User canceled the $file baseline update"
+
+                echo "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
+                exit 7
+            fi
+        fi
         continue
     fi
 
     if [ ! -f "$baseline_file" ]; then
         log_warn "No baseline exists for $file. Creating one now..."
         cp "$file" "$baseline_file"
+        chattr +i "$baseline_file"
         log_ok "Baseline created for $file"
         continue
     fi

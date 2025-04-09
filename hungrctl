@@ -44,14 +44,26 @@ run_check() {
 
 # ===== Function: run_all_checks =====
 run_all_checks() {
-    run_check "$ROOT_DIR/service_checks/check_firewall.sh"
-    run_check "$ROOT_DIR/service_checks/check_config.sh"
-    run_check "$ROOT_DIR/service_checks/check_services.sh"
-    run_check "$ROOT_DIR/service_checks/check_coreutils.sh"
-    run_check "$ROOT_DIR/service_checks/check_login_package.sh"
-    run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
-    run_check "$ROOT_DIR/service_checks/check_credentials.sh"
-    run_check "$ROOT_DIR/service_checks/check_cron.sh"
+    run_check "$ROOT_DIR/service_checks/check_firewall.sh" "$MODE"
+    run_check "$ROOT_DIR/service_checks/check_config.sh" "$MODE"
+    run_check "$ROOT_DIR/service_checks/check_services.sh" "$MODE"
+    run_check "$ROOT_DIR/service_checks/check_coreutils.sh" "$MODE"
+    run_check "$ROOT_DIR/service_checks/check_login_package.sh" "$MODE"
+    run_check "$ROOT_DIR/service_checks/check_passwd_package.sh" "$MODE"
+    run_check "$ROOT_DIR/service_checks/check_credentials.sh" "$MODE"
+    run_check "$ROOT_DIR/service_checks/check_cron.sh" "$MODE"
+}
+
+# ===== Function: run_specific_check =====
+run_specific_checks() {
+    [ "$firewall_check" = true ] && run_check "$ROOT_DIR/service_checks/check_firewall.sh" "$MODE"
+    [ "$config_check" = true ] && run_check "$ROOT_DIR/service_checks/check_config.sh" "$MODE"
+    [ "$coreutils_check" = true ] && run_check "$ROOT_DIR/service_checks/check_coreutils.sh" "$MODE"
+    [ "$login_check" = true ] && run_check "$ROOT_DIR/service_checks/check_login_package.sh" "$MODE"
+    [ "$passwd_check" = true ] && run_check "$ROOT_DIR/service_checks/check_passwd_package.sh" "$MODE"
+    [ "$credentials_check" = true ] && run_check "$ROOT_DIR/service_checks/check_credentials.sh" "$MODE"
+    [ "$services_check" = true ] && run_check "$ROOT_DIR/service_checks/check_services.sh" "$MODE"
+    [ "$cron_check" = true ] && run_check "$ROOT_DIR/service_checks/check_cron.sh" "$MODE"
 }
 
 # ===== Function: show_log_summary =====
@@ -149,7 +161,7 @@ if [ $# -gt 0 ]; then
 fi
 
 # Now parse the remaining options
-OPTS=$(getopt -o "acdfhlm:nprsu" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:,no-summary,credentials,cron" -n "$0" -- "$@")
+OPTS=$(getopt -o "acdfhlm:nopr:su" --long "all,firewall,config,services,coreutils,login,passwd,help,mode:,no-summary,credentials,cron,run:" -n "$0" -- "$@")
 if [ $? -ne 0 ]; then
     show_help
     exit 1
@@ -171,22 +183,22 @@ while true; do
             ;;
         -c|--config)
             run_all=false
-            run_check "$ROOT_DIR/service_checks/check_config.sh"
+            config_check=true
             shift
             ;;
         -d|--credentials)
             run_all=false
-            run_check "$ROOT_DIR/service_checks/check_credentials.sh"
+            credentials_check=true
             shift
             ;;
         -f|--firewall)
             run_all=false
-            run_check "$ROOT_DIR/service_checks/check_firewall.sh"
+            firewall_check=true
             shift
             ;;
         -l|--login)
             run_all=false
-            run_check "$ROOT_DIR/service_checks/check_login_package.sh"
+            login_check=true
             shift
             ;;
         -m|--mode)
@@ -197,24 +209,28 @@ while true; do
             summary=false
             shift
             ;;
-        -p|--passwd)
+        -o|--cron)
             run_all=false
-            run_check "$ROOT_DIR/service_checks/check_passwd_package.sh"
+            cron_check=true
             shift
             ;;
-        -r|--cron)
+        -p|--passwd)
             run_all=false
-            run_check "$ROOT_DIR/service_checks/check_cron.sh"
+            passwd_check=true
             shift
+            ;;
+        -r|--run)
+            cmd="$2"
+            shift 2
             ;;
         -s|--services)
             run_all=false
-            run_check "$ROOT_DIR/service_checks/check_services.sh"
+            services_check=true
             shift
             ;;
         -u|--coreutils)
             run_all=false
-            run_check "$ROOT_DIR/service_checks/check_coreutils.sh"
+            coreutils_check=true
             shift
             ;;
         -h|--help)
@@ -233,9 +249,29 @@ while true; do
     esac
 done
 
-# Run all checks if no specific check was specified
-if [ "$run_all" = true ]; then
-    run_all_checks
+# ===== Baseline Mode =====
+if [ "$MODE" = "baseline" ]; then
+    find "$BASELINE_DIR" -type f -exec chattr -i {} \;
+    if [ -n "$cmd" ]; then
+        "$cmd"
+    if [ "$run_all" = true ]; then
+        run_all_checks "$MODE"
+    else
+        run_specific_checks "$MODE"
+    fi
+    find "$BASELINE_DIR" -type f -exec chattr +i {} \;
+fi
+
+# ===== Check Mode =====
+if [ "$MODE" = "check" ]; then
+    if [ -n "$cmd" ]; then
+        "$cmd"
+    fi
+    if [ "$run_all" = true ]; then
+        run_all_checks "$MODE"
+    else
+        run_specific_checks "$MODE"
+    fi
 fi
 
 # Append run log to full log
@@ -248,7 +284,7 @@ if [ "$DISCORD" = true ]; then
         "$LOGGING_WEBHOOK_URL"
 fi
 
-# ===== Show Output =====
+# ===== Show Output by Default =====
 if [ "$summary" = true ]; then
     show_log_summary
 fi

@@ -30,6 +30,7 @@ fi
 if [ ! -f "$BASELINE_FILE" ]; then
     log_warn "No baseline file found at $BASELINE_FILE. Creating one now..."
     nft list ruleset > "$BASELINE_FILE"
+    chattr +i "$BASELINE_FILE"
     if [ $? -eq 0 ]; then
         log_ok "Created a baseline file for nftables rules."
     else

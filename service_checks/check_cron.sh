@@ -78,6 +78,7 @@ compare_cron() {
         log_warn "No baseline file found for cron job changes. Creating one now..."
         dump_cron
         cp "$temp_file" "$baseline_file"
+        chattr +i "$baseline_file"
         log_ok "Created a baseline file for cron job changes."
     fi
 }
@@ -87,6 +88,27 @@ if [ "$MODE" = "check" ]; then
     compare_cron
 elif [ "$MODE" = "baseline" ]; then
     dump_cron
-    cp "$temp_file" "$baseline_file"
-    log_ok "Updated the baseline file for cron job changes."
+    if diff -u "$baseline_file" "$temp_file" > /dev/null; then
+        log_ok "No differences found. Baseline already up to date."
+        exit 0
+    else
+        log_warn "Differences detected:"
+        diff -u "$baseline_file" "$temp_file"
+
+        read -p "Overwrite existing baseline with current ruleset? [y/N]: " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            mv "$temp_file" "$baseline_file"
+            log_ok "Baseline updated successfully."
+            event_log "BASELINE-UPDATED" "User approved and updated the cron job baseline"
+
+            echo "[$HOST] Baseline cron job changes were updated via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
+            exit 0
+        else
+            log_info "Baseline update canceled."
+            event_log "BASELINE-CANCELED" "User canceled the cron job baseline update"
+
+            echo "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
+            exit 7
+        fi
+    fi
 fi
