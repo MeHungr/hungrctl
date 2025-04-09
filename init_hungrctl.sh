@@ -26,7 +26,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=$ROOT_DIR/hungrctl.sh -n
+ExecStart=$ROOT_DIR/hungrctl -n
 StandardOutput=journal
 StandardError=journal
 User=root
