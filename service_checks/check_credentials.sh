@@ -268,6 +268,16 @@ update_baseline() {
     for baseline_file in "${!file_pairs[@]}"; do
         current_file="${file_pairs[$baseline_file]}"
         
+        # Ensure baseline file exists
+        if [ ! -f "$baseline_file" ]; then
+            log_warn "No baseline file found at $baseline_file. Creating one now..."
+            cp "$current_file" "$baseline_file"
+            chattr +i "$baseline_file"
+            log_ok "Created baseline file for $current_file"
+            continue
+        fi
+        
+        # Compare files
         if diff -u "$baseline_file" "$current_file" > /dev/null; then
             log_ok "No differences found. Baseline for $current_file already up to date." >> "$SUMMARY_LOG"
         else
