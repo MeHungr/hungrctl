@@ -46,7 +46,6 @@ ExecStart=$ROOT_DIR/hungrctl -n
 StandardOutput=journal
 StandardError=journal
 User=root
-SyslogIdentifier=hungrctl
 EOF
 chmod 600 "$service_dest"
 chown root:root "$service_dest"
@@ -65,7 +64,6 @@ OnBootSec=0sec
 OnUnitActiveSec=1min
 AccuracySec=1sec
 Persistent=true
-SyslogIdentifier=hungrctl-timer
 
 [Install]
 WantedBy=timers.target
