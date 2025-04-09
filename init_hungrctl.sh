@@ -74,8 +74,8 @@ chattr +i "$ROOT_DIR/hungrctl"
 chattr +i "$ROOT_DIR/service_checks"
 
 # ===== Step 4: Reload systemd and enable timer =====
-echo "[*] Reloading systemd and enabling $timer_file..."
+echo "[*] Reloading systemd and enabling $timer_dest..."
 
 systemctl daemon-reexec
-systemctl enable --now "$timer_file"
-log_ok "Enabled and started $timer_file"
+systemctl enable --now "$timer_dest"
+log_ok "Enabled and started $timer_dest"
