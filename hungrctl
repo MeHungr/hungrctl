@@ -257,16 +257,41 @@ done
 
 # ===== Baseline Mode =====
 if [ "$MODE" = "baseline" ]; then
-    find "$BASELINE_DIR" -type f -exec chattr -i {} \;
-    if [ -n "$cmd" ]; then
-        "$cmd"
+    # Ensure baseline directory exists
+    if [ ! -d "$BASELINE_DIR" ]; then
+        log_fail "Baseline directory $BASELINE_DIR does not exist. Please run init_hungrctl.sh first."
+        exit 1
     fi
+
+    # Only try to modify attributes if files exist
+    if [ -n "$(find "$BASELINE_DIR" -type f)" ]; then
+        if ! find "$BASELINE_DIR" -type f -exec chattr -i {} \; 2>/dev/null; then
+            log_warn "Could not remove immutable attributes from baseline files. Continuing anyway..."
+        fi
+    fi
+
+    # Run custom command if provided
+    if [ -n "$cmd" ]; then
+        log_info "Running custom command: $cmd"
+        if ! eval "$cmd"; then
+            log_fail "Custom command failed with exit code $?"
+            exit 1
+        fi
+    fi
+
+    # Run checks
     if [ "$run_all" = true ]; then
         run_all_checks "$MODE"
     else
         run_specific_checks "$MODE"
     fi
-    find "$BASELINE_DIR" -type f -exec chattr +i {} \;
+
+    # Only try to add attributes if files exist
+    if [ -n "$(find "$BASELINE_DIR" -type f)" ]; then
+        if ! find "$BASELINE_DIR" -type f -exec chattr +i {} \; 2>/dev/null; then
+            log_warn "Could not add immutable attributes to baseline files. Continuing anyway..."
+        fi
+    fi
 fi
 
 # ===== Check Mode =====
