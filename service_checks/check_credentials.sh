@@ -124,8 +124,8 @@ check_modified_users() {
 
     for user in "${!baseline_users[@]}"; do
         if [[ -n "${current_users[$user]}" ]]; then
-            IFS=':' read -r b_uid b_gid b_desc b_home b_shell <<< "${baseline_users[$user]}"
-            IFS=':' read -r c_uid c_gid c_desc c_home c_shell <<< "${current_users[$user]}"
+            IFS=':' read -r b_pass b_uid b_gid b_desc b_home b_shell <<< "${baseline_users[$user]}"
+            IFS=':' read -r c_pass c_uid c_gid c_desc c_home c_shell <<< "${current_users[$user]}"
 
             if [[ "$b_uid" != "$c_uid" ]]; then
                 if [ "$modified_found" = false ]; then
@@ -168,6 +168,7 @@ check_modified_users() {
             fi
         fi
     done
+
     if [ "$modified_found" = false ]; then
         log_ok "No modified users found."
     fi
