@@ -27,7 +27,7 @@ run_check() {
     log_info "[DONE] $label--------------------" >> "$RUN_LOG"
     if [ "$MODE" = "baseline" ]; then
         log_info "[DONE] $label--------------------"
-        echo >> "$RUN_LOG"
+        echo
     fi
 
     # Append summary to full summary
