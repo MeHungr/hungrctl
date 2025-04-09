@@ -56,6 +56,6 @@ check_locked "/etc/systemd/system/$timer"
 # ===== Send Discord notification if enabled and issues are detected =====
 if [ "$DISCORD" = true ]; then
     if [ -s "$temp_log" ]; then
-        send_discord_alert "$temp_log" "HungrCTL Watchdog Alert" "$WATCHDOG_WEBHOOK_URL"
+        send_discord_alert "$(cat "$temp_log")" "HungrCTL Watchdog Alert" "$WATCHDOG_WEBHOOK_URL"
     fi
 fi
