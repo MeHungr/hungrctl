@@ -63,7 +63,6 @@ Description=Run HungrCTL every minute
 OnBootSec=0sec
 OnUnitActiveSec=1min
 AccuracySec=1sec
-Persistent=true
 
 [Install]
 WantedBy=timers.target
