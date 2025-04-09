@@ -130,6 +130,28 @@ break_config_files() {
     log_ok "Config files broken successfully"
 }
 
+# ===== Function to break credential checks =====
+break_credential_checks() {
+    log_info "Breaking credential checks..."
+    
+    # Create a test user with UID 0 (root clone)
+    useradd -u 0 -o -g root -G root -d /root -s /bin/bash test_root_clone 2>/dev/null || true
+    
+    # Modify passwd file
+    cp /etc/passwd /etc/passwd.bak
+    echo "test_user:x:1001:1001:Test User:/home/test_user:/bin/bash" >> /etc/passwd
+    
+    # Modify shadow file
+    cp /etc/shadow /etc/shadow.bak
+    echo "test_user::19110:0:99999:7:::" >> /etc/shadow
+    
+    # Modify group file
+    cp /etc/group /etc/group.bak
+    echo "test_group:x:1001:test_user" >> /etc/group
+    
+    log_ok "Credential checks broken successfully"
+}
+
 # ===== Function to restore all =====
 restore_all() {
     log_info "Restoring all broken components..."
@@ -181,6 +203,17 @@ restore_all() {
         fi
     done
     
+    # Restore credential checks
+    # Remove test user
+    userdel -f test_root_clone 2>/dev/null || true
+    userdel -f test_user 2>/dev/null || true
+    groupdel test_group 2>/dev/null || true
+    
+    # Restore credential files
+    [ -f /etc/passwd.bak ] && mv /etc/passwd.bak /etc/passwd
+    [ -f /etc/shadow.bak ] && mv /etc/shadow.bak /etc/shadow
+    [ -f /etc/group.bak ] && mv /etc/group.bak /etc/group
+    
     log_ok "All components restored successfully"
 }
 
@@ -193,6 +226,7 @@ case "$1" in
         break_services
         break_firewall
         break_config_files
+        break_credential_checks
         ;;
     "restore")
         restore_all

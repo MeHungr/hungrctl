@@ -50,7 +50,7 @@ get_ruleset() {
 # ===== Function: Compare against baseline =====
 compare_ruleset() {
     if ! diff -u "$BASELINE_FILE" "$TEMP_FILE" > /dev/null; then
-        log_fail "The nftables ruleset differs from baseline."
+        log_warn "The nftables ruleset differs from baseline."
         diff -u "$BASELINE_FILE" "$TEMP_FILE"
 
         if [ "$AUTO_RESTORE_FIREWALL" = true ]; then

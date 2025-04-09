@@ -24,10 +24,12 @@ COREUTILS_WEBHOOK_URL="https://discord.com/api/webhooks/1358728376109633647/2Afj
 LOGIN_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358985167062040737/oTSb0A6jURHDI8CMMow96AHS1-br9AXh_vgNzOiumZWVSN1fz1FnREko2VVZJcoI_7wv"
 PASSWD_PACKAGE_WEBHOOK_URL="https://discord.com/api/webhooks/1358990134032334930/m9j0XBEypsrejpXZzt29evzPmhTutviipsSzoGUoJPMVXFcpURvPk1g_oonX8hgdBB6P"
 CONFIG_WEBHOOK_URL="https://discord.com/api/webhooks/1359016250126110856/LtEaAvWMfXPvO8bO3OyyyCPCpH2gVQOoCUj-sdymvko3C2aX9tod0q1t4-6T_PASXclF"
+CREDENTIALS_WEBHOOK_URL="https://discord.com/api/webhooks/1359016300005197855/0000000000000000000000000000000000000000000000000000000000000000"
 
 # ===== GENERAL CONFIGURATION =====
 AUTO_RESTART=true # Automatically restart services that are down
 AUTO_RESTORE_CONFIG_FILES=true # Automatically restore config files from baseline if they're modified
+AUTO_RESTORE_CREDENTIALS=true # Automatically restore credentials from baseline if they're modified
 AUTO_RESTORE_FIREWALL=true # Automatically restore firewall ruleset from baseline if it's modified
 AUTO_REINSTALL_COREUTILS=true # Automatically reinstall coreutils if it's missing
 AUTO_REINSTALL_LOGIN_PACKAGE=true # Automatically reinstall login package if it's missing
