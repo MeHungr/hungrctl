@@ -23,24 +23,42 @@ MODE="${1:-check}"
 dump_cron() {
     {
         echo "### /etc/crontab"
-        cat /etc/crontab 2>/dev/null || true
+        if [ -f /etc/crontab ]; then
+            while IFS= read -r line; do
+                echo "[SOURCE:/etc/crontab] $line"
+            done < /etc/crontab
+        fi
 
         echo -e "\n### /etc/cron.d/*"
-        cat /etc/cron.d/* 2>/dev/null || true
+        for file in /etc/cron.d/*; do
+            [ -f "$file"] || continue
+            while IFS= read -r line; do
+                echo "[SOURCE:$file] $line"
+            done < "$file"
+        done
 
         echo -e "\n### User crontabs"
         # Get users first, then process them
         users=$(awk -F: '$3 >= 1000 && $7 !~ /nologin|false/ {print $1}' /etc/passwd)
         while read -r user; do
-            echo -e "\n# crontab for user: $user"
-            crontab -l -u "$user" 2>/dev/null || echo "# No crontab for $user"
+            if crontab -l -u "$user" > /dev/null 2>&1; then
+                while IFS= read -r line; do
+                    echo "[SOURCE:user:$user] $line"
+                done < <(crontab -l -u "$user" 2>/dev/null)
+            else
+                echo "[SOURCE:user:$user] # No crontab"
+            fi
         done <<< "$users"
 
         echo -e "\n### Cront script hashes (/etc/cron.*)"
         # Get files first, then process them
         files=$(find /etc/cron.{hourly,daily,weekly,monthly} -type f 2>/dev/null | sort)
         while read -r file; do
-            sha256sum "$file" 2>/dev/null || echo "FAILED_HASH $file"
+            if [ -f "$file" ]; then
+                echo "[SOURCE:$file] $(sha256sum "$file" 2>/dev/null)"
+            else
+                echo "[SOURCE:$file] FAILED_HASH"
+            fi
         done <<< "$files"
     } > "$temp_file"
 }
