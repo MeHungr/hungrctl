@@ -204,7 +204,12 @@ check_uid_0_clones() {
         return
     fi
     clones_found=false
-    awk -F: '($3 == 0) {print $1}' /etc/passwd | while read -r user; do
+    
+    # Store the results in a variable first
+    uid_0_users=$(awk -F: '($3 == 0) {print $1}' /etc/passwd)
+    
+    # Process the results
+    while read -r user; do
         if [ "$user" != "root" ]; then
             if [ "$clones_found" = false ]; then
                 echo "------------UID 0 Clones------------" >> "$SUMMARY_LOG"
@@ -214,8 +219,9 @@ check_uid_0_clones() {
             event_log "UID-0-CLONE" "UID 0 clone detected: $user"
             echo "[$HOST] UID 0 clone detected: $user at $(timestamp)" >> "$SUMMARY_LOG"
         fi
-    done
-    if "$clones_found" = false; then
+    done <<< "$uid_0_users"
+    
+    if [ "$clones_found" = false ]; then
         log_ok "No UID 0 clones detected."
     fi
 }
