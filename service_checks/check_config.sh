@@ -36,8 +36,16 @@ for file in "${CONFIG_FILES[@]}"; do
     baseline_file="$CONFIG_BASELINE_DIR/$(echo "$file" | sed 's|/|_|g').baseline"
 
     if [ "$MODE" = "baseline" ]; then
+        if [ ! -f "$baseline_file" ]; then
+            log_warn "No baseline exists for $file. Creating one now..."
+            cp "$file" "$baseline_file"
+            chattr +i "$baseline_file"
+            log_ok "Baseline created for $file"
+            continue
+        fi
+
         if diff -u "$baseline_file" "$file" > /dev/null; then
-            log_ok "No differences found. Baseline already up to date." >> "$SUMMARY_LOG"
+            log_ok "No differences found. Baseline already up to date." | tee -a "$SUMMARY_LOG"
         else
             log_warn "Differences detected in $file:"
             diff -u "$baseline_file" "$file"
@@ -47,12 +55,12 @@ for file in "${CONFIG_FILES[@]}"; do
                 log_ok "Baseline updated successfully."
                 event_log "BASELINE-UPDATED" "User approved and updated the $file baseline"
 
-                echo "[$HOST] Baseline for $file was updated via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
+                echo "[$HOST] Baseline for $file was updated via baseline mode at $(timestamp)" >> "$SUMMARY_LOG"
             else
                 log_info "Baseline update canceled."
                 event_log "BASELINE-CANCELED" "User canceled the $file baseline update"
 
-                echo "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" > "$SUMMARY_LOG"
+                echo "[$HOST] Baseline update was canceled via baseline mode at $(timestamp)" >> "$SUMMARY_LOG"
             fi
         fi
         continue
@@ -122,10 +130,7 @@ if [[ ${#MISSING_FILES[@]} -gt 0 || ${#MODIFIED_FILES[@]} -gt 0 ]]; then
     log_warn "Config file check completed with issues."
     exit 10
 else
-    if [ "$MODE" = "baseline" ]; then
-        log_ok "Baselines updated for all config files."
-        exit 0
-    else
+    if [ "$MODE" = "check" ]; then
         log_ok "All config files validated successfully."
         exit 0
     fi
