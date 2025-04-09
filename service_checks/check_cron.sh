@@ -31,7 +31,7 @@ dump_cron() {
 
         echo -e "\n### /etc/cron.d/*"
         for file in /etc/cron.d/*; do
-            [ -f "$file"] || continue
+            [ -f "$file" ] || continue
             while IFS= read -r line; do
                 echo "[SOURCE:$file] $line"
             done < "$file"
