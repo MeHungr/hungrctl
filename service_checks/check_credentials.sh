@@ -111,6 +111,7 @@ check_modified_users() {
     fi
 
     declare -A baseline_users current_users
+    modified_found=false
 
     while IFS=: read -r user pass uid gid desc home shell; do
         baseline_users[$user]="$pass:$uid:$gid:$desc:$home:$shell"
@@ -119,8 +120,6 @@ check_modified_users() {
     while IFS=: read -r user pass uid gid desc home shell; do
         current_users[$user]="$pass:$uid:$gid:$desc:$home:$shell"
     done < /etc/passwd
-
-    modified_found=false
 
     for user in "${!baseline_users[@]}"; do
         if [[ -n "${current_users[$user]}" ]]; then
