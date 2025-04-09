@@ -29,14 +29,19 @@ dump_cron() {
         cat /etc/cron.d/* 2>/dev/null || true
 
         echo -e "\n### User crontabs"
-        awk -F '$3 >= 1000 && $7 !~ /nologin|false/ {print $1}' /etc/passwd | while read -r user; do
+        # Get users first, then process them
+        users=$(awk -F: '$3 >= 1000 && $7 !~ /nologin|false/ {print $1}' /etc/passwd)
+        while read -r user; do
             echo -e "\n# crontab for user: $user"
             crontab -l -u "$user" 2>/dev/null || echo "# No crontab for $user"
-        done
+        done <<< "$users"
+
         echo -e "\n### Cront script hashes (/etc/cron.*)"
-        find /etc/cron.{hourly,daily,weekly,monthly} -type f 2>/dev/null | sort | while read -r file; do
+        # Get files first, then process them
+        files=$(find /etc/cron.{hourly,daily,weekly,monthly} -type f 2>/dev/null | sort)
+        while read -r file; do
             sha256sum "$file" 2>/dev/null || echo "FAILED_HASH $file"
-        done
+        done <<< "$files"
     } > "$temp_file"
 }
 
