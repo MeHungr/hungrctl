@@ -9,21 +9,25 @@ run_check() {
     local summary_log="$SUMMARY_DIR/${label}.summary"
 
     log_info "[RUNNING] $label--------------------" >> "$RUN_LOG"
-    log_info "[RUNNING] $label--------------------"  # Also log to console
+    if [ "$MODE" = "baseline" ]; then
+        log_info "[RUNNING] $label--------------------"
+    fi
 
-    # Run the check quietly, capture output to a temp log
-    "$script_path" "$MODE" > "$temp_log" 2>&1
+    # Run the check and capture output to a temp log
+    # In baseline mode, allow interactive input
+    if [ "$MODE" = "baseline" ]; then
+        "$script_path" "$MODE" | tee "$temp_log"
+    else
+        "$script_path" "$MODE" > "$temp_log" 2>&1
+    fi
 
     # Append to persistent logs
     cat "$temp_log" >> "$RUN_LOG"
 
-    # In baseline mode, also show the output to console
-    if [ "$MODE" = "baseline" ]; then
-        cat "$temp_log"
-    fi
-
     log_info "[DONE] $label--------------------" >> "$RUN_LOG"
-    log_info "[DONE] $label--------------------"  # Also log to console
+    if [ "$MODE" = "baseline" ]; then
+        log_info "[DONE] $label--------------------"
+    fi
 
     # Append summary to full summary
     if [ -e "$summary_log" ]; then
