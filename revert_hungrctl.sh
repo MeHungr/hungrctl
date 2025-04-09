@@ -22,6 +22,8 @@ echo "[*] Reverting hungrctl setup..."
 echo "[*] Disabling systemd timer and service..."
 systemctl disable --now hungrctl.timer
 systemctl disable --now hungrctl.service
+systemctl disable --now hungrctl-watchdog.timer
+systemctl disable --now hungrctl-watchdog.service
 
 # ===== Step 2: Remove immutable attributes =====
 echo "[*] Removing chattr +i from service and timer files..."
