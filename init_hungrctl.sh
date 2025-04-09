@@ -8,7 +8,7 @@ service_dest="/etc/systemd/system/hungrctl.service"
 timer_dest="/etc/systemd/system/hungrctl.timer"
 
 # ===== Source environment and logging =====
-source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../lib/env.sh"
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/lib/env.sh"
 
 # ===== This script must be run as root =====
 if [ "$EUID" -ne 0 ]; then
