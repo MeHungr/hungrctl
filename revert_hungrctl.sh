@@ -32,6 +32,8 @@ echo "[*] Removing chattr +i from script files..."
 find "$ROOT_DIR/service_checks" -type f -exec chattr -i {} \; 2>/dev/null || true
 chattr -i "$ROOT_DIR/service_checks" 2>/dev/null || true
 chattr -i "$ROOT_DIR/hungrctl" 2>/dev/null || true
+chattr -i "$ROOT_DIR/watchdog" 2>/dev/null || true
+chattr -i "$ROOT_DIR/init_hungrctl.sh" 2>/dev/null || true
 
 # ===== Step 3: Remove systemd unit files =====
 rm -f "$service_file"
