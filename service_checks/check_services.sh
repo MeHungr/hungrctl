@@ -60,7 +60,7 @@ done
 if [ "$AUTO_RESTART" = true ]; then
 	for svc in "${FAILED_SERVICES[@]}" "${INACTIVE_SERVICES[@]}"; do
 		log_info "Attempting to restart $svc..."
-		systemctl restart "$svc"
+		systemctl enable --now "$svc"
 
 		if systemctl is-active --quiet "$svc"; then
 			log_ok "$svc restarted successfully."
