@@ -31,23 +31,36 @@ safe_set_immutable() {
     fi
 }
 
-# ===== Ensure scripts are executable =====
-echo "[*] Setting script permissions..."
+# ===== Step 0: Set initial permissions =====
+echo "[*] Setting initial permissions..."
+
+# Set permissions for main scripts
 for script in "$ROOT_DIR/hungrctl" "$ROOT_DIR/watchdog"; do
     if [ -f "$script" ]; then
         chmod 700 "$script" || log_fail "Failed to set permissions on $script"
+        chown root:root "$script" || log_fail "Failed to set ownership on $script"
     else
         log_fail "Required script $script not found"
         exit 1
     fi
 done
 
+# Set permissions for service checks and lib
 chmod -R 700 "$ROOT_DIR/service_checks" || log_fail "Failed to set permissions on service_checks"
 chmod -R 700 "$ROOT_DIR/lib" || log_fail "Failed to set permissions on lib directory"
+chown -R root:root "$ROOT_DIR/service_checks" || log_fail "Failed to set ownership on service_checks"
+chown -R root:root "$ROOT_DIR/lib" || log_fail "Failed to set ownership on lib directory"
+
+# Set permissions for config and output
+chmod 600 "$ROOT_DIR/config.sh" 2>/dev/null || log_warn "Failed to set config.sh permissions"
+chmod -R 600 "$OUTPUT_DIR" 2>/dev/null || log_warn "Failed to set output directory permissions"
+chmod -R 666 "$LOG_DIR" "$SUMMARY_DIR" 2>/dev/null || log_warn "Failed to set log/summary directory permissions"
+chown -R root:root "$ROOT_DIR/config.sh" 2>/dev/null || true
+chown -R root:root "$OUTPUT_DIR" 2>/dev/null || true
 
 log_info "[*] Starting hungrctl system initialization..."
 
-# ===== Step 0: Remove existing service and timer =====
+# ===== Step 1: Remove existing service and timer =====
 echo "[*] Cleaning up existing services..."
 for service in "$service_dest" "$timer_dest" "$watchdog_dest" "$watchdog_timer_dest"; do
     if [ -f "$service" ]; then
@@ -56,7 +69,7 @@ for service in "$service_dest" "$timer_dest" "$watchdog_dest" "$watchdog_timer_d
     fi
 done
 
-# ===== Step 1: Deploy systemd service =====
+# ===== Step 2: Deploy systemd service =====
 echo "[*] Deploying hungrctl systemd service..."
 
 cat <<EOF > "$service_dest"
@@ -83,7 +96,7 @@ chown root:root "$service_dest" || log_fail "Failed to set ownership on $service
 safe_set_immutable "$service_dest"
 log_ok "Deployed and locked $service_dest"
 
-# ===== Step 2: Deploy systemd timer =====
+# ===== Step 3: Deploy systemd timer =====
 echo "[*] Deploying hungrctl systemd timer..."
 
 cat <<EOF > "$timer_dest"
@@ -105,7 +118,7 @@ chown root:root "$timer_dest" || log_fail "Failed to set ownership on $timer_des
 safe_set_immutable "$timer_dest"
 log_ok "Deployed and locked $timer_dest"
 
-# ===== Step 3: Create watchdog service =====
+# ===== Step 4: Create watchdog service =====
 echo "[*] Creating watchdog service..."
 
 cat <<EOF > "$watchdog_dest"
@@ -130,7 +143,7 @@ chown root:root "$watchdog_dest" || log_fail "Failed to set ownership on $watchd
 safe_set_immutable "$watchdog_dest"
 log_ok "Deployed and locked $watchdog_dest"
 
-# ===== Step 4: Create watchdog timer =====
+# ===== Step 5: Create watchdog timer =====
 echo "[*] Creating watchdog timer..."
 
 cat <<EOF > "$watchdog_timer_dest"
@@ -152,7 +165,7 @@ chown root:root "$watchdog_timer_dest" || log_fail "Failed to set ownership on $
 safe_set_immutable "$watchdog_timer_dest"
 log_ok "Deployed and locked $watchdog_timer_dest"
 
-# ===== Step 5: Lock down hungrctl directory =====
+# ===== Step 6: Lock down hungrctl directory =====
 echo "[*] Locking down hungrctl directory..."
 
 # Protect everything by default
@@ -166,11 +179,16 @@ chmod -R 666 "$LOG_DIR" "$SUMMARY_DIR" 2>/dev/null || log_warn "Failed to set lo
 
 # Lock check scripts & main script
 safe_set_immutable "$ROOT_DIR/service_checks"
+safe_set_immutable "$ROOT_DIR/lib"
 safe_set_immutable "$ROOT_DIR/hungrctl"
 safe_set_immutable "$ROOT_DIR/watchdog"
 safe_set_immutable "$ROOT_DIR/init_hungrctl.sh"
+safe_set_immutable "$service_dest"
+safe_set_immutable "$timer_dest"
+safe_set_immutable "$watchdog_dest"
+safe_set_immutable "$watchdog_timer_dest"
 
-# ===== Step 6: Reload systemd and enable timers =====
+# ===== Step 7: Reload systemd and enable timers =====
 echo "[*] Reloading systemd and enabling services..."
 
 systemctl daemon-reload || log_fail "Failed to reload systemd"
