@@ -41,11 +41,26 @@ done
 # ===== Check key file integrity =====
 check_locked() {
     local file="$1"
-    if ! lsattr "$file" 2>/dev/null | grep -q '\-i-'; then
-        log_warn "$file is not immutable, attempting to restore..."
-        chattr +i "$file"
-        log_ok "Restored immutability to $file"
-    fi
+    if [ -f "$file" ]; then
+        if ! lsattr "$file" 2>/dev/null | grep -q '\-i-'; then
+            log_warn "$file is not immutable, attempting to restore..."
+            chattr +i "$file"
+            log_ok "Restored immutability to $file"
+        fi
+    else if [ -d "$file" ]; then
+        files="$(find "$file")"
+        for f in $files; do
+            if ! lsattr "$f" 2>/dev/null | grep -q '\-i-'; then
+                log_warn "$f is not immutable, attempting to restore..."
+                chattr +i "$f"
+                log_ok "Restored immutability to $f"
+            fi
+            if ! lsattr "$file" 2>/dev/null | grep -q '\-i-'; then
+                log_warn "$file is not immutable, attempting to restore..."
+                chattr +i "$file"
+                log_ok "Restored immutability to $file"
+            fi
+        done
 }
 
 check_locked "$ROOT_DIR/hungrctl"
