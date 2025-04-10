@@ -44,7 +44,7 @@ for unit in hungrctl.timer hungrctl.service hungrctl-watchdog.timer hungrctl-wat
     fi
 done
 
-# ===== Step 2: Remove immutable attributes =====
+# ===== Step 2: Remove immutable attributes from ALL files =====
 echo "[*] Removing immutable attributes from system files..."
 for file in "$service_file" "$timer_file" "$watchdog_service" "$watchdog_timer"; do
     safe_remove_immutable "$file"
@@ -52,9 +52,12 @@ done
 
 echo "[*] Removing immutable attributes from script files..."
 safe_remove_immutable "$ROOT_DIR/service_checks"
+safe_remove_immutable "$ROOT_DIR/lib"
 safe_remove_immutable "$ROOT_DIR/hungrctl"
 safe_remove_immutable "$ROOT_DIR/watchdog"
 safe_remove_immutable "$ROOT_DIR/init_hungrctl.sh"
+safe_remove_immutable "$ROOT_DIR/config.sh"
+safe_remove_immutable "$OUTPUT_DIR"
 
 # ===== Step 3: Remove systemd unit files =====
 echo "[*] Removing systemd unit files..."
