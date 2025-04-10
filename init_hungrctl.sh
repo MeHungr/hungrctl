@@ -45,6 +45,15 @@ for script in "$ROOT_DIR/hungrctl" "$ROOT_DIR/watchdog"; do
     fi
 done
 
+# ===== Step 0.5: Symlink hungrctl globally =====
+echo "[*] Creating symlink for hungrctl..."
+if [ -f "$ROOT_DIR/hungrctl" ]; then
+    ln -sf "$ROOT_DIR/hungrctl" /usr/local/bin/hungrctl
+    log_ok "Symlink created at /usr/local/bin/hungrctl"
+else
+    log_warn "hungrctl not found — skipping symlink"
+fi
+
 # Set permissions for service checks and lib
 chmod -R 700 "$ROOT_DIR/service_checks" || log_fail "Failed to set permissions on service_checks"
 chmod -R 700 "$ROOT_DIR/lib" || log_fail "Failed to set permissions on lib directory"
@@ -53,8 +62,8 @@ chown -R root:root "$ROOT_DIR/lib" || log_fail "Failed to set ownership on lib d
 
 # Set permissions for config and output
 chmod 600 "$ROOT_DIR/config.sh" 2>/dev/null || log_warn "Failed to set config.sh permissions"
-chmod -R 600 "$OUTPUT_DIR" 2>/dev/null || log_warn "Failed to set output directory permissions"
-chmod -R 666 "$LOG_DIR" "$SUMMARY_DIR" 2>/dev/null || log_warn "Failed to set log/summary directory permissions"
+chmod -R 644 "$OUTPUT_DIR" 2>/dev/null || log_warn "Failed to set output directory permissions"
+chmod -R 644 "$LOG_DIR" "$SUMMARY_DIR" 2>/dev/null || log_warn "Failed to set log/summary directory permissions"
 chown -R root:root "$ROOT_DIR/config.sh" 2>/dev/null || true
 chown -R root:root "$OUTPUT_DIR" 2>/dev/null || true
 
@@ -199,4 +208,4 @@ for timer in "$timer_dest" "$watchdog_timer_dest"; do
     fi
 done
 
-log_info "[o7] hungrctl fully initialized and secured."
+log_info "[V] hungrctl fully initialized and secured."
