@@ -31,7 +31,7 @@ run_check() {
     fi
 
     # Append summary to full summary
-    if [ -e "$summary_log" ]; then
+    if [ -s "$summary_log" ]; then
         echo >> "$FULL_SUMMARY"
         cat "$summary_log" >> "$FULL_SUMMARY"
         echo >> "$FULL_SUMMARY"
