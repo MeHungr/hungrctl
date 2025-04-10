@@ -21,7 +21,7 @@ fi
 
 
 # ===== Resolve output and tmp directories =====
-OUTPUT_DIR="${OUTPUT_DIR:-output}"  # Default to "output" if not set
+OUTPUT_DIR="$(resolve_path "${OUTPUT_DIR:-output}")"  # Default to "output" if not set
 LOG_DIR="$OUTPUT_DIR/logs"
 BASELINE_DIR="$OUTPUT_DIR/baselines"
 CONFIG_BASELINE_DIR="$BASELINE_DIR/config"

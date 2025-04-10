@@ -9,11 +9,21 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Ensure CRON_BASELINE_DIR exists
+mkdir -p "$CRON_BASELINE_DIR" || {
+    log_fail "Failed to create CRON_BASELINE_DIR: $CRON_BASELINE_DIR"
+    exit 1
+}
+
 temp_file="$TMP_DIR/cron_dump.txt"
 baseline_file="$CRON_BASELINE_DIR/cron_dump.baseline"
 SUMMARY_LOG="$SUMMARY_DIR/check_cron.summary"
-# Create the summary log file if it doesn't exist
-# and clear it.
+
+# Create the summary log file if it doesn't exist and clear it
+mkdir -p "$(dirname "$SUMMARY_LOG")" || {
+    log_fail "Failed to create SUMMARY_LOG directory"
+    exit 1
+}
 touch "$SUMMARY_LOG"
 > "$SUMMARY_LOG"
 trap "rm -f '$temp_file'" EXIT
@@ -77,8 +87,13 @@ compare_cron() {
     else
         log_warn "No baseline file found for cron job changes. Creating one now..."
         dump_cron
-        cp "$temp_file" "$baseline_file"
-        chattr +i "$baseline_file"
+        cp "$temp_file" "$baseline_file" || {
+            log_fail "Failed to create baseline file: $baseline_file"
+            exit 1
+        }
+        chattr +i "$baseline_file" || {
+            log_warn "Failed to set immutable attribute on baseline file"
+        }
         log_ok "Created a baseline file for cron job changes."
     fi
 }
@@ -88,16 +103,19 @@ if [ "$MODE" = "check" ]; then
     compare_cron
 elif [ "$MODE" = "baseline" ]; then
     dump_cron
-    if diff -u "$baseline_file" "$temp_file" > /dev/null; then
+    if [ -f "$baseline_file" ] && diff -u "$baseline_file" "$temp_file" > /dev/null; then
         log_ok "No differences found. Baseline already up to date."
         exit 0
     else
         log_warn "Differences detected:"
-        diff -u "$baseline_file" "$temp_file"
+        diff -u "$baseline_file" "$temp_file" 2>/dev/null
 
         read -p "Overwrite existing baseline with current ruleset? [y/N]: " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            cp "$temp_file" "$baseline_file"
+            cp "$temp_file" "$baseline_file" || {
+                log_fail "Failed to update baseline file: $baseline_file"
+                exit 1
+            }
             log_ok "Baseline updated successfully."
             event_log "BASELINE-UPDATED" "User approved and updated the cron job baseline"
 
