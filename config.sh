@@ -5,7 +5,7 @@
 # place to update all of the information.
 
 # ===== Services to monitor =====
-SERVICES=("apache2" "ssh" "cron" "hungrctl.timer" "hungrctl-watchdog.timer")
+SERVICES=("apache2" "ssh" "cron" "hungrctl.timer" "hungrctl-watchdog.timer" "nftables")
 
 # ===== Config files to check =====
 CONFIG_FILES=("/etc/ssh/sshd_config" "/etc/apache2/apache2.conf")
