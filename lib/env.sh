@@ -45,12 +45,11 @@ mkdir -p "$LOG_DIR" "$BASELINE_DIR" "$CONFIG_BASELINE_DIR" \
 "$CRON_BASELINE_DIR"
 
 # ===== Export final resolved paths =====
-export LOG_DIR="$(realpath "$LOG_DIR")"
-export BASELINE_DIR="$(realpath "$BASELINE_DIR")"
-export CONFIG_BASELINE_DIR="$(realpath "$CONFIG_BASELINE_DIR")"
-export FIREWALL_BASELINE_DIR="$(realpath "$FIREWALL_BASELINE_DIR")"
-export CREDENTIALS_BASELINE_DIR="$(realpath "$CREDENTIALS_BASELINE_DIR")"
-export CRON_BASELINE_DIR="$(realpath "$CRON_BASELINE_DIR")"
-export TMP_DIR="$(realpath "$TMP_DIR")"
-export ROOT_DIR
-export DISTRO
+export LOG_DIR="$(realpath "$LOG_DIR")" \
+BASELINE_DIR="$(realpath "$BASELINE_DIR")" \
+CONFIG_BASELINE_DIR="$(realpath "$CONFIG_BASELINE_DIR")" \
+FIREWALL_BASELINE_DIR="$(realpath "$FIREWALL_BASELINE_DIR")" \
+CREDENTIALS_BASELINE_DIR="$(realpath "$CREDENTIALS_BASELINE_DIR")" \
+CRON_BASELINE_DIR="$(realpath "$CRON_BASELINE_DIR")" TMP_DIR="$(realpath "$TMP_DIR")" \
+ROOT_DIR \
+DISTRO
