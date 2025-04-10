@@ -12,6 +12,7 @@
 - **Systemd service and timer checks** to ensure essential services are running
 - **Checks for tampered or missing login/passwd packages**
 - **Discord webhook integration** for sending alerts to multiple channels
+- **Symbolic link** for ease of use—just run `hungrctl` as a command
 
 ---
 
