@@ -19,6 +19,13 @@ else
     DISTRO="unknown"
 fi
 
+# ===== Helper function to resolve relative paths to absolute =====
+resolve_path() {
+    case "$1" in
+        /*) echo "$1" ;;  # If it's already an absolute path, return it
+        *) echo "$ROOT_DIR/$1" ;;  # If it's relative, append it to ROOT_DIR
+    esac
+}
 
 # ===== Resolve output and tmp directories =====
 OUTPUT_DIR="$(resolve_path "${OUTPUT_DIR:-output}")"  # Default to "output" if not set
@@ -31,13 +38,7 @@ FIREWALL_BASELINE_DIR="$BASELINE_DIR/firewall"
 TMP_DIR="$OUTPUT_DIR/tmp"
 SUMMARY_DIR="$OUTPUT_DIR/summaries"
 
-# ===== Helper function to resolve relative paths to absolute =====
-resolve_path() {
-    case "$1" in
-        /*) echo "$1" ;;  # If it's already an absolute path, return it
-        *) echo "$ROOT_DIR/$1" ;;  # If it's relative, append it to ROOT_DIR
-    esac
-}
+
 
 # ===== Create all necessary directories =====
 mkdir -p "$LOG_DIR" "$BASELINE_DIR" "$CONFIG_BASELINE_DIR" \
