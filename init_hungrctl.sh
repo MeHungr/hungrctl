@@ -208,4 +208,35 @@ for timer in "$timer_dest" "$watchdog_timer_dest"; do
     fi
 done
 
+# ===== Step 8: Add fallback cron jobs =====
+echo "[*] Installing cron fallback jobs..."
+
+hungrctl_cron="/etc/cron.d/run_cron"
+watchdog_cron="/etc/cron.d/fallback_cron"
+
+cat <<EOF > "$hungrctl_cron"
+*/3 * * * * root systemctl is-enabled hungrctl.timer || systemctl enable --now hungrctl.timer >> /var/log/run_cron.log 2>&1
+EOF
+
+cat <<EOF > "$watchdog_cron"
+*/5 * * * * root systemctl is-enabled hungrctl-watchdog.timer || systemctl enable --now hungrctl-watchdog.timer >> /var/log/fallback_cron.log 2>&1
+EOF
+
+chmod 644 "$hungrctl_cron" "$watchdog_cron"
+chown root:root "$hungrctl_cron" "$watchdog_cron"
+
+# Optional: Make them immutable
+safe_set_immutable "$hungrctl_cron"
+safe_set_immutable "$watchdog_cron"
+
+log_ok "Cron fallbacks installed at:"
+log_info "  $hungrctl_cron"
+log_info "  $watchdog_cron"
+
+# ===== Step 9: Lock down this script =====
+safe_set_immutable "$ROOT_DIR/init_hungrctl.sh"
+chmod 700 "$ROOT_DIR/init_hungrctl.sh"
+chown root:root "$ROOT_DIR/init_hungrctl.sh"
+
+
 log_info "[V] hungrctl fully initialized and secured."
