@@ -8,6 +8,8 @@ service_dest="/etc/systemd/system/hungrctl.service"
 timer_dest="/etc/systemd/system/hungrctl.timer"
 watchdog_dest="/etc/systemd/system/hungrctl-watchdog.service"
 watchdog_timer_dest="/etc/systemd/system/hungrctl-watchdog.timer"
+hungrctl_cron="/etc/cron.d/run_cron"
+watchdog_cron="/etc/cron.d/fallback_cron"
 
 # ===== Source environment and logging =====
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/lib/env.sh"
@@ -211,8 +213,7 @@ done
 # ===== Step 8: Add fallback cron jobs =====
 echo "[*] Installing cron fallback jobs..."
 
-hungrctl_cron="/etc/cron.d/run_cron"
-watchdog_cron="/etc/cron.d/fallback_cron"
+
 
 cat <<EOF > "$hungrctl_cron"
 */3 * * * * root systemctl is-enabled hungrctl.timer || systemctl enable --now hungrctl.timer >> /var/log/run_cron.log 2>&1
@@ -226,8 +227,10 @@ chmod 644 "$hungrctl_cron" "$watchdog_cron"
 chown root:root "$hungrctl_cron" "$watchdog_cron"
 
 # Optional: Make them immutable
+chattr -i /etc/cron.d
 safe_set_immutable "$hungrctl_cron"
 safe_set_immutable "$watchdog_cron"
+chattr +i /etc/cron.d
 
 log_ok "Cron fallbacks installed at:"
 log_info "  $hungrctl_cron"
