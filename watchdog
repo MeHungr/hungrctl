@@ -67,6 +67,8 @@ check_locked "$ROOT_DIR/hungrctl"
 check_locked "$ROOT_DIR/service_checks"
 check_locked "/etc/systemd/system/$service"
 check_locked "/etc/systemd/system/$timer"
+check_locked "$ROOT_DIR/lib"
+check_locked "$ROOT_DIR/init_hungrctl.sh"
 
 # ===== Send Discord notification if enabled and issues are detected =====
 if [ "$DISCORD" = true ]; then
