@@ -216,11 +216,11 @@ echo "[*] Installing cron fallback jobs..."
 
 
 cat <<EOF > "$hungrctl_cron"
-*/3 * * * * root systemctl is-enabled hungrctl.timer || systemctl enable --now hungrctl.timer >> /var/log/run_cron.log 2>&1
+*/3 * * * * root systemctl is-enabled hungrctl.timer &>/dev/null || systemctl enable --now hungrctl.timer >> /var/log/run_cron.log 2>&1
 EOF
 
 cat <<EOF > "$watchdog_cron"
-*/5 * * * * root systemctl is-enabled hungrctl-watchdog.timer || systemctl enable --now hungrctl-watchdog.timer >> /var/log/fallback_cron.log 2>&1
+*/5 * * * * root systemctl is-enabled hungrctl-watchdog.timer &>/dev/null || systemctl enable --now hungrctl-watchdog.timer >> /var/log/fallback_cron.log 2>&1
 EOF
 
 chmod 644 "$hungrctl_cron" "$watchdog_cron"
